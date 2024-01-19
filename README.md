@@ -6,7 +6,7 @@ IEEE Transactions on Dependable and Secure Computing 2023
 
 ## How to run?
 - for each entity(UE/OA/AP/CSP):
-  go run xx/go
+  go run xx.go
 
    
 
