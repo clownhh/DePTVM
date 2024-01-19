@@ -5,8 +5,13 @@
 IEEE Transactions on Dependable and Secure Computing 2023
 
 ## How to run?
-- for each entity(UE/OA/AP/CSP):
-  go run xx.go
+
+1. Use installenv.sh to install the necessary Go language packages.
+2. for each entity(UE/OA/AP/CSP):
+  go run _.go
+
+> initial order: CSP>OA>AP>UE
+
 
    
 
