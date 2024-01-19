@@ -2,6 +2,9 @@
 
 [***"Deptvm: Decentralized pseudonym and trust value management for integrated networks"***](https://ieeexplore.ieee.org/abstract/document/10049178)
 
+<img width="910" alt="image" src="https://github.com/eternaldlw/DePTVM/assets/115533295/6177e6f0-8bb2-4562-a41c-6a0dfe6cb26a">
+![image](https://github.com/eternaldlw/DePTVM/assets/115533295/b8113d07-52df-4bb8-85db-7dc25bbbca38)
+
 IEEE Transactions on Dependable and Secure Computing 2023
 
 ## How to run?
