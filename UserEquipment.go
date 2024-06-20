@@ -48,7 +48,7 @@ const UE_CONNECTED = 1
 var userEquipment *UserEquipment
 
 func Handle_UE(buf []byte, addr *net.UDPAddr, tmpUserEquipment *UserEquipment, n int) {
-	//decode the event
+	//decode the event 处理函数
 	userEquipment = tmpUserEquipment
 	event := &proto.Event{}
 	err := gob.NewDecoder(bytes.NewReader(buf[:n])).Decode(event)
