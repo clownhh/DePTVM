@@ -118,7 +118,16 @@ func initUE(APAddr string) {
 	a := suite.Scalar().Pick(suite.RandomStream()) // Alice's private key
 	//生成一个随机的私钥（标量）
 	A := suite.Point().Mul(a, nil)
+	//使用私钥 a 和椭圆曲线的基点（也称为生成元）计算公钥 A。
+	/*suite.Point():
+	创建一个新的椭圆曲线点。在椭圆曲线密码学中，点通常表示公钥。
+	Mul(a, nil):
+	Mul 方法用于点乘操作。a 是一个标量（私钥），nil 表示使用椭圆曲线的基点（生成元）进行乘法运算。
+	具体来说，这相当于计算 a * G，其中 G 是椭圆曲线的基点。
+ 	*/
+	
 	userEquipment = &UserEquipment{AccessPointAddr, nil, UE_CONFIGURATION, suite, a, A, suite.Point(), nil}
+	//初始化一个 UserEquipment 结构体实例，并为其字段赋值。  //suite.Point() 创建了一个新的椭圆曲线点。
 	fmt.Println("[UE] Parameter initialization is complete.")
 	fmt.Println("[UE] My public key is ", userEquipment.PublicKey)
 }
