@@ -84,7 +84,10 @@ func Handle_UE(buf []byte, addr *net.UDPAddr, tmpUserEquipment *UserEquipment, n
 	*/
 	
 	util.CheckErr(err)
-
+	/*util.CheckErr(err) 表示调用 util 包中的 CheckErr 函数，并将 err 作为参数传递给该函数。这通常用于处理错误。
+	util.CheckErr 函数的定义和具体实现取决于 util 包的内容。一个常见的 CheckErr 函数可能会检查 err 是否为 nil，如果不为 nil，则处理该错误，例如打印错误信息并终止程序。
+	*/
+	
 	switch event.EventType {
 	case proto.UE_REGISTER_CONFIRMATION:
 		handleRegisterConfirmation(userEquipment)
@@ -102,10 +105,18 @@ func Handle_UE(buf []byte, addr *net.UDPAddr, tmpUserEquipment *UserEquipment, n
 func initUE(APAddr string) {
 	//load AP's ip and port
 	AccessPointAddr, err := net.ResolveUDPAddr("udp", APAddr)
+	/*net.ResolveUDPAddr 函数用于将一个网络地址解析为 *net.UDPAddr 类型的地址。该函数解析提供的地址，并返回一个包含 IP 和端口信息的 net.UDPAddr 结构体指针。如果解析过程中发生错误，则返回一个错误。
+ 	net.ResolveUDPAddr 函数将一个网络地址字符串 APAddr 解析为 *net.UDPAddr 类型。
+	第一个参数 "udp" 指定网络类型，表示这是一个 UDP 地址。
+	第二个参数 APAddr 是一个字符串，表示要解析的地址，通常包含 IP 地址或主机名和端口号（例如 "192.168.1.1:8080" 或 "localhost:8080"）。
+	*/
+	
 	util.CheckErr(err)
 	//initlize suite
 	suite := edwards25519.NewBlakeSHA256Ed25519()  // Use the edwards25519-curve
+	//表示初始化一个新的加密套件，使用 Ed25519 椭圆曲线和 Blake2b 哈希函数进行操作。Ed25519 是一种基于椭圆曲线的数字签名算法，具有高安全性和高效性，Blake2b 是一种快速的加密哈希函数。
 	a := suite.Scalar().Pick(suite.RandomStream()) // Alice's private key
+	//生成一个随机的私钥（标量）
 	A := suite.Point().Mul(a, nil)
 	userEquipment = &UserEquipment{AccessPointAddr, nil, UE_CONFIGURATION, suite, a, A, suite.Point(), nil}
 	fmt.Println("[UE] Parameter initialization is complete.")
