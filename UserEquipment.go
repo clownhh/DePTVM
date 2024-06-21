@@ -136,10 +136,17 @@ func initUE(APAddr string) {
 func registerUE() {
 	// set the parameters to register
 	bytePublicKey, _ := userEquipment.PublicKey.MarshalBinary()
+	// kyber.Point 接口的一个方法，用于将椭圆曲线点序列化为字节数组。这个方法在需要将点传输或存储时非常有用。
 	params := map[string]interface{}{
 		"public_key": bytePublicKey,
 	}
+	//声明、初始化并赋值。
+	/*创建了一个 map[string]interface{} 类型的变量 params，其中包含一个键值对，将序列化后的公钥（字节数组）存储在 public_key 键下。
+ 	map[string]interface{} 是一种灵活的方式来存储不同类型的值，因为 interface{} 可以表示任何类型。
+	*/
+	
 	event := &proto.Event{proto.UE_REGISTER_APSIDE, params}
+	//创建一个包含 proto.UE_REGISTER_APSIDE 和 params 的 proto.Event 结构体实例。
 	util.SendToAccessPoint(userEquipment.Socket, util.Encode(event))
 }
 
