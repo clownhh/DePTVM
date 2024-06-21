@@ -8,6 +8,7 @@ import (
 )
 
 var config map[string]string = make(map[string]string, 2)
+//创建了一个键类型为 string，值类型也为 string 的映射，并预先分配了一些空间（这里是2个键值对的空间）。
 
 func ReadConfig() map[string]string {
 	config = make(map[string]string)
