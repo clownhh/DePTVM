@@ -74,8 +74,11 @@ func SendToAccessPoint(conn *net.UDPConn, content []byte) {
 	_, err := conn.Write(content)
 	if err != nil {
 		panic(err.Error())
+		//panic 是一种触发运行时错误的机制，用于表示程序无法继续执行的严重错误。
 	}
 }
+//下划线 _ 被称为“空白标识符”（blank identifier）。它用于忽略不需要使用的值或变量。
+//使用空白标识符时，表示你明确知道有个值存在，但你不需要这个值，因此可以用 _ 来占位，避免编译器报错未使用变量的错误。
 
 func ToHexInt(num int64) []byte {
 	buff := new(bytes.Buffer)
