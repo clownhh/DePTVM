@@ -52,11 +52,11 @@ func Handle_UE(buf []byte, addr *net.UDPAddr, tmpUserEquipment *UserEquipment, n
 	//decode the event 处理函数
 	/*1.buf []byte:
 	类型是 []byte，表示一个字节切片（slice）。通常用于存储二进制数据或字节流。
- 	2.addr *net.UDPAddr:
+ 	2.addr *net.UDPAddr:   发送方地址
 	类型是 *net.UDPAddr，表示一个指向 net.UDPAddr 类型的指针。net.UDPAddr 是 Go 标准库中的一个结构体，表示一个 UDP 地址。
 	3.tmpUserEquipment *UserEquipment:
 	类型是 *UserEquipment，表示一个指向 UserEquipment 类型的指针。UserEquipment 是一个用户自定义的类型，通常是一个结构体（struct）。 
-	4.n int:
+	4.n int:   数据量
 	类型是 int，表示一个整数。
 	*/
 
@@ -162,9 +162,11 @@ func handleRegisterConfirmation(userEquipment *UserEquipment) {
 func handleSyncRepUE(params map[string]interface{}, userEquipment *UserEquipment) {
 	//set one-time pseudonym and g
 	g := userEquipment.Suite.Point()
+	//使用加密套件取一个点
 	// deserialize g and calculate nym
 	g.UnmarshalBinary(params["g"].([]byte))
-	nym := userEquipment.Suite.Point().Mul(userEquipment.PrivateKey, g)
+	//反序列化 ？
+	nym := userEquipment.Suite.Point().Mul(userEquipment.PrivateKey, g)  ？
 	//set UE'S parameters
 	userEquipment.G = g
 	userEquipment.OnetimePseudoNym = nym
@@ -175,9 +177,15 @@ func handleSyncRepUE(params map[string]interface{}, userEquipment *UserEquipment
 
 func startUEListener() {
 	fmt.Println("[UE] UserEquiment Listener started...")
-	buf := make([]byte, 4096)
+	buf := make([]byte, 4096)   //声明了一个切片slice
 	for {
 		n, addr, err := userEquipment.Socket.ReadFromUDP(buf)
+		/*从一个UDP套接字读取数据，并返回读取的数据长度、发送方的地址和任何可能发生的错误。存储到 buf 缓冲区
+  		1.n：读取到的字节数。
+		2.addr：发送方的地址，类型为 *net.UDPAddr。
+		3.err：读取过程中可能发生的错误。
+		*/
+		
 		if err != nil {
 			log.Fatal(err)
 		}
