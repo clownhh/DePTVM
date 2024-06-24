@@ -101,7 +101,7 @@ func Handle_UE(buf []byte, addr *net.UDPAddr, tmpUserEquipment *UserEquipment, n
 	}
 }
 
-//init
+//init  新建UDP连接，初始化加密套件suite，新建结构体userEquipment
 func initUE(APAddr string) {
 	//load AP's ip and port
 	AccessPointAddr, err := net.ResolveUDPAddr("udp", APAddr)
@@ -132,7 +132,7 @@ func initUE(APAddr string) {
 	fmt.Println("[UE] My public key is ", userEquipment.PublicKey)
 }
 
-//register
+//register  事件结构体
 func registerUE() {
 	// set the parameters to register
 	bytePublicKey, _ := userEquipment.PublicKey.MarshalBinary()
@@ -200,23 +200,29 @@ func main() {
 	fmt.Println("[UE] User equiment started!")
 	fmt.Print("[UE] Please enter the IP address of the access point: ")
 	reader := bufio.NewReader(os.Stdin)
+	//创建了一个新的 bufio.Reader，用于从标准输入（os.Stdin）读取数据。具体来说，它将标准输入包装在一个缓冲读取器中，以便更高效地读取数据，特别是用于逐行读取或者逐字符读取。
 	ipdata, _, err := reader.ReadLine()
+	//从一个 bufio.Reader 中读取一行数据。
 	if err == nil {
 		fmt.Println("[UE] Enter success!")
 	}
 	APAddr := string(ipdata)
+	//将读取到的字节切片 ipdata 转换为字符串，并将其赋值给变量 APAddr。具体来说，它是将 ipdata 中的字节数据解释为一个UTF-8编码的字符串。
 
 	//initial params and network configurations
 	initUE(APAddr)
 
 	conn, err := net.DialUDP("udp", nil, userEquipment.AccessPointAddr)
+	//创建一个新的UDP连接。具体来说，它调用 net.DialUDP 函数来连接到指定的UDP服务器（userEquipment.AccessPointAddr）。
 	util.CheckErr(err)
 
 	//set socket
 	userEquipment.Socket = conn
+	
 	//start listener
 	go startUEListener()
 	time.Sleep(1.0 * time.Second)
+	//使程序暂停执行指定的时间。程序会暂停执行1秒钟。
 
 	registerUE()
 	fmt.Println("[UE] Wait for register confirmation.")
@@ -227,12 +233,14 @@ func main() {
 	// read command and process
 	fmt.Println("[UE] Enter your command.")
 
-Loop:
+Loop:  //标记一个无线循环
 	for {
 		fmt.Print("cmd >> ")
 		data, _, _ := reader.ReadLine()
 		command := string(data)
 		commands := strings.Split(command, " ")
+		//从标准输入读取一行数据，将其转换为字符串，并根据空格将字符串拆分成多个命令。这通常用于解析用户输入，例如命令行接口（CLI）中的命令和参数
+		
 		switch commands[0] {
 		case "exit":
 			break Loop
