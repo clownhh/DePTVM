@@ -30,7 +30,7 @@ func SortMap(mp map[string]string) []string {
 		newMap = append(newMap, k)
 	}
 
-	//2.对切片排序
+	//2.对切片排序  对字符串切片采用字典序升序排列
 	sort.Strings(newMap)
 
 	var finalList []string = nil
