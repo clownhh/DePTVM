@@ -237,7 +237,7 @@ func handleSyncRepAP(params map[string]interface{}) {
 
 }
 
-/////////////////////////////////
+/////////////////////////////////   更新网络拓扑
 func updateTopology() {
 	TopologyConfig := util.ReadTopologyConfig()
 	list := util.SortMap(TopologyConfig)
@@ -285,6 +285,7 @@ func registerAP() {
 	util.Send(accessPoint.Socket, accessPoint.CloudServiceProviderAddr, util.Encode(event))
 }
 
+//持续监听，并调用处理函数
 func startAPListener() {
 	fmt.Println("[AP] AccessPoint listener started...")
 	buf := make([]byte, 4096)
@@ -296,11 +297,13 @@ func startAPListener() {
 }
 
 func dataCollectionToCSP(localPort uint) {
-	//read the csv and add the nym to the head,which is NE's behavior records
+	//read the csv and add the nym to the head, which is NE's behavior records   ?
 
 	//get the data
 	var Records = make([]util.Record, record_scale)
+	//创建了一个长度为 record_scale 的切片，其中每个元素的类型是 util.Record。
 	var opencast *os.File = nil
+	//os.File 是 Go 标准库 os 包中的一个结构体，表示一个打开的文件对象。
 	var err error = nil
 	//fmt.Println(localPort)
 	// support different dataset to different AP (simulate the dataset collected from UE)
