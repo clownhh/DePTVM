@@ -67,7 +67,7 @@ type AccessPoint struct {
 }
 
 //get last OA
-
+//为结构体a（AccessPoint）定义的方法
 func (a *AccessPoint) GetLastOA() *net.UDPAddr {
 	if len(a.OAList) == 0 {
 		return nil
@@ -89,6 +89,7 @@ func (a *AccessPoint) GetFirstOA() *net.UDPAddr {
 func (a *AccessPoint) AddUE(key kyber.Point, val *net.UDPAddr) {
 	// delete the client who has same ip address
 	for k, v := range a.UEs {
+		//用于迭代一个集合（如数组、切片、映射或通道）的常用语法。k 表示映射中的键，v 表示映射中的值
 		if v.String() == val.String() {
 			delete(a.UEs, k)
 			break
@@ -113,6 +114,7 @@ func (a *AccessPoint) AddIntoDecryptedTVMap(key kyber.Point, val float64) {
 
 ///////////////////////////////////////////////
 //Handle function part
+//如果你在函数外部（即在任何函数或方法之外）使用 var 声明一个变量，那么这个变量就是全局的，它可以在整个包（package）中被访问。
 var accessPoint *AccessPoint
 var srcAddr *net.UDPAddr
 
