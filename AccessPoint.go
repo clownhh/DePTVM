@@ -336,8 +336,13 @@ func dataCollectionToCSP(localPort uint) {
 		//if read success,get the data to records
 		for j := 0; j < len(read)-1; j++ {
 			tempdata, _ := strconv.ParseFloat(read[j], 64)
+			/*strconv 是 Go 标准库中的一个包，用于提供字符串与基本数据类型之间的转换功能。
+			ParseFloat 是 strconv 包中的一个函数，用于将字符串转换为浮点数。
+   			64 是转换精度参数，表示将字符串转换为 float64 类型的浮点数。
+			*/
 			if math.IsInf(tempdata, 0) || math.IsNaN(tempdata) {
 				tempdata = 0.0
+				//检查浮点数 tempdata 是否为正无穷、负无穷或 NaN（Not a Number），如果是，则将其重置为 0.0。
 			}
 			Records[i].Data = append(Records[i].Data, tempdata)
 		}
