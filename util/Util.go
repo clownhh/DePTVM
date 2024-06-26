@@ -173,9 +173,9 @@ type basicSig struct {
 // Returns a secret that depends on on a message and a point
 func hashSchnorr(suite Suite, message []byte, p kyber.Point) kyber.Scalar {
 	pb, _ := p.MarshalBinary()
-	c := suite.XOF(pb)
-	c.Write(message)
-	return suite.Scalar().Pick(c)
+	c := suite.XOF(pb)   //随机扩展输出
+	c.Write(message)   //message写入c
+	return suite.Scalar().Pick(c) //从随机源c中选择一个伪随机标量值
 }
 
 // This simplified implementation of Schnorr Signatures is based on
