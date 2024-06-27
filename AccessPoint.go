@@ -351,7 +351,7 @@ func dataCollectionToCSP(localPort uint) {
 
 	//get the nym from NElist
 	i := 0
-	for j := 0; j < record_scale/node_scale; j++ {
+	for j := 0; j < record_scale/node_scale; j++ {      // ?
 
 		for _, nym := range accessPoint.DecryptedKeysMap {
 			Records[i].Nym = nym
@@ -368,7 +368,7 @@ func dataCollectionToCSP(localPort uint) {
 		byteRecord := util.ToByteRecord(Records[i])
 		SignRe := util.SchnorrSign(accessPoint.Suite, random.New(),
 			byteRecord, accessPoint.PrivateKey)
-		//mu.Lock()
+		//mu.Lock()    // 互斥锁
 		var start bool = false
 		var done bool = false
 		//set the start and done flag
@@ -408,11 +408,12 @@ func main() {
 	//get local ip address
 	config := util.ReadConfig()
 	// check available port
-	Port, err := strconv.Atoi(config["ap_port"])
+	Port, err := strconv.Atoi(config["ap_port"])    //将一个字符串转换为整数
 	util.CheckErr(err)
 	var LocalAddr *net.UDPAddr = nil
 	var Socket *net.UDPConn = nil
 	for i := Port; i <= Port+1000; i++ {
+		//端口增加，监听没有错误的端口
 		addr, _ := net.ResolveUDPAddr("udp", config["ap_ip"]+":"+strconv.Itoa(i))
 		conn, err := net.ListenUDP("udp", addr)
 		if err == nil {
@@ -442,13 +443,14 @@ func main() {
 	initAP(LocalAddr, Socket, OAAddr, CSPAddr)
 	updateTopology()
 	go startAPListener()
+	//使用 go 关键字时，函数会在一个新的 goroutine 中异步执行，当前 goroutine 会立即继续执行后续代码，而不等待新 goroutine 执行完毕。
 	registerAP()
 	for i := 0; i < ListMaintenceNumber; i++ {
 		for accessPoint.Status != AP_COLLECTION {
 			//wait for new list
 		}
 		// add a time to solve interrupt
-		localPort := uint(LocalAddr.Port)
+		localPort := uint(LocalAddr.Port)  //无符号整数类型
 		if localPort >= 8002 {
 			time.Sleep(4.0 * time.Second)
 		} else {	
