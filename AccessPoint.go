@@ -328,7 +328,7 @@ func dataCollectionToCSP(localPort uint) {
 
 	node_scale := len(accessPoint.DecryptedTurstValueMap)
 
-
+	//将数据从字符串转换为浮点数，然后存储。
 	for i := 0; i < record_scale; i++ {
 		//read one row
 		read, err = ReadCsv.Read()
