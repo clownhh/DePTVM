@@ -1,4 +1,5 @@
 package util
+//utility 实用工具包
 
 import (
 	"bytes"
