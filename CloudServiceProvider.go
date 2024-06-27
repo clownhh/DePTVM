@@ -142,6 +142,7 @@ func handleDataCollection_AP_Side(params map[string]interface{}, addr *net.UDPAd
 	Nym := cloudServiceProvider.Suite.Point()
 
 	if ok, _ := params["Start"].(bool); ok {
+		//ok, _ := params["Start"].(bool) 是一个短变量声明，其中 _ 用于忽略类型断言返回的具体值，而 ok 是一个布尔值，表示类型断言是否成功。
 		fmt.Println("[CSP] Recieve the trust value related data from AccessPoint:", addr)
 
 	}
@@ -216,13 +217,13 @@ func dataCollectionToOA() {
 		event := &proto.Event{proto.DATA_COLLECTION_OA, pm}
 
 		for _, OAAddr := range cloudServiceProvider.OAList {
-			wait.Add(1)
+			wait.Add(1)    //将 sync.WaitGroup 的计数器加 1。这个操作确保 WaitGroup 知道有一个新的 goroutine 需要等待。
 			go func(OAAddr *net.UDPAddr) {
-				defer wait.Done()
+				defer wait.Done()     //确保 goroutine 完成时，将 WaitGroup 的计数器减 1。这是为了确保即使函数内部发生了错误，Done 也会被调用，避免程序死锁。
 				util.Send(cloudServiceProvider.Socket, OAAddr, util.Encode(event))
 			}(OAAddr)
 		}
-		wait.Wait()
+		wait.Wait()    //阻塞执行，直到 WaitGroup 的计数器减为零。
 		//If each piece of trust data is sent without interval, packet corruption will occur, so the interval is 1 microsecond
 		time.Sleep(1.0 * time.Millisecond)
 
@@ -231,6 +232,7 @@ func dataCollectionToOA() {
 	fmt.Println("[CSP] Trust data has been sent.")
 }
 
+//监听然后处理
 func startCSPListener() {
 	fmt.Println("[CSP] CloudServiceProvider Listener started...")
 	buf := make([]byte, 4096)
