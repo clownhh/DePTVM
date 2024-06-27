@@ -50,6 +50,9 @@ var OANum int = 0
 //var APNum int = 0
 
 var wait = sync.WaitGroup{}
+/*sync.WaitGroup 是一个计数器，用来等待一组并发操作完成。
+可以通过 Add 方法增加计数，通过 Done 方法减少计数，通过 Wait 方法阻塞，直到计数器归零。
+*/
 
 //the times of data sharing cycle
 //======================3 Times================
