@@ -292,7 +292,7 @@ Loop:
 	//start the cycle
 	for i := 0; i < times; i++ {
 		//go check()
-		for !(OANum == size1) {
+		for !(OANum == size1) {    //等待OA注册达到数量    ？
 			time.Sleep(1.0 * time.Millisecond)
 		}
 		OANum = 0
