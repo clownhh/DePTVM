@@ -127,11 +127,16 @@ func ProtobufEncodePointList(plist []kyber.Point) []byte {
 func ProtobufDecodePointList(bytes []byte) []kyber.Point {
 	var aPoint kyber.Point
 	var tPoint = reflect.TypeOf(&aPoint).Elem()
+	//reflect.Type 类型的 .Elem() 方法返回指针指向的元素类型。如果 reflect.Type 表示一个指针类型，则 Elem() 返回指针指向的变量类型；否则，它会引发 panic。
+	
 	suite := edwards25519.NewBlakeSHA256Ed25519()
 
 	cons := protobuf.Constructors{
 		tPoint: func() interface{} { return suite.Point() },
 	}
+	/*Constructors 映射（map）是一个用于根据类型动态创建对象的映射。映射的键通常是类型（reflect.Type），值是创建该类型对象的函数（通常是一个返回 interface{} 的函数）。
+ 	这种映射在需要根据类型信息动态创建对象的场景中非常有用，如反序列化、依赖注入等。
+	*/
 
 	var msg PointList
 	if err := protobuf.DecodeWithConstructors(bytes, &msg, cons); err != nil {
