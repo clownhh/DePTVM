@@ -123,7 +123,7 @@ func clearBuffer() {
 	operatorAgent.NewUEsBuffer = nil
 }
 
-//status setting about blockchain
+//status setting about blockchain   //声明常量
 const (
 	//status setting about OA's blockchain status
 	FREE    = 0
@@ -146,7 +146,7 @@ const (
 	ListMaintenceNumber int = 3
 )
 
-var mu sync.Mutex
+var mu sync.Mutex   
 var operatorAgent *OperatorAgent
 var srcAddr *net.UDPAddr
 var wg sync.WaitGroup
