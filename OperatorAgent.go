@@ -239,11 +239,14 @@ func handleUERegisterOASide_OA(params map[string]interface{}) {
 	tepUE, _ := params["UEAddr"].(string)
 	tepAP, _ := params["UpperAP"].(string)
 	newKey := operatorAgent.Suite.Point().Mul(operatorAgent.Roundkey, publicKey)
+	//表示用 operatorAgent.Roundkey 这个标量乘以 publicKey 这个点，并返回结果点（newKey）。
 	byteNewKey, _ := newKey.MarshalBinary()
 	UEAddr, err := net.ResolveUDPAddr("udp", tepUE)
+	//将一个表示 IP 地址和端口的字符串解析为 *net.UDPAddr 类型的地址对象。
 	util.CheckErr(err)
 	fmt.Println("[OA] Receive  register request from UserEquipment: ", UEAddr)
 	operatorAgent.KeyMap[newKey.String()] = publicKey
+	//表示将一个 publicKey 存储在 operatorAgent.KeyMap 中，键为 newKey 转换为字符串的结果。
 
 	pm := map[string]interface{}{
 		"public_key": byteNewKey,
@@ -272,6 +275,7 @@ func verifyNeffShuffle(params map[string]interface{}) {
 
 	if _, shuffled := params["shuffled"]; shuffled {
 		// get all the necessary parameters
+		//将字节数组解码为点列表
 		xbarList := util.ProtobufDecodePointList(params["xbar"].([]byte))
 		ybarList := util.ProtobufDecodePointList(params["ybar"].([]byte))
 		prevKeyList := util.ProtobufDecodePointList(params["prev_keys"].([]byte))
