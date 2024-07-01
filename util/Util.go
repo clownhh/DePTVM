@@ -136,13 +136,21 @@ func ProtobufDecodePointList(bytes []byte) []kyber.Point {
 	}
 	/*Constructors 映射（map）是一个用于根据类型动态创建对象的映射。映射的键通常是类型（reflect.Type），值是创建该类型对象的函数（通常是一个返回 interface{} 的函数）。
  	这种映射在需要根据类型信息动态创建对象的场景中非常有用，如反序列化、依赖注入等。
+  	protobuf.Constructors 是一个映射，其键是反射类型，值是创建该类型对象的函数。
+	tPoint 是 kyber.Point 的反射类型。
+	func() interface{} { return suite.Point() } 是一个返回 kyber.Point 对象的函数。
 	*/
 
 	var msg PointList
 	if err := protobuf.DecodeWithConstructors(bytes, &msg, cons); err != nil {
 		log.Fatal(err)
 	}
+	/*protobuf.DecodeWithConstructors(bytes, &msg, cons) 使用构造器映射解码字节数组 bytes 为 msg。
+	*/
 	return msg.Points
+
+	/*利用反射和构造器映射来动态地解码点列表。这在需要从序列化的数据中恢复复杂对象（如加密点）时非常有用。
+	*/
 }
 
 func FloatRound(f float64) float64 {
