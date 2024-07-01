@@ -25,7 +25,7 @@ import (
 	"errors"
 
 	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/proof"
+	"go.dedis.ch/kyber/v4/proof"                 //零知识证明的库
 	sh "go.dedis.ch/kyber/v4/shuffle"
 	"go.dedis.ch/kyber/v4/util/random"
 )
@@ -39,8 +39,9 @@ type Suite proof.Suite
 // XX the Zs in front of some field names are a kludge to make them
 // accessible via the reflection API,
 // which refuses to touch unexported fields in a struct.
+//一些字段名称前面的Zs是一个组合，以便通过反射API访问它们，它拒绝访问结构体中未导出的字段。
 
-// P (Prover) step 1: public commitments
+// P (Prover) step 1: public commitments    //公共承诺
 type ega1 struct {
 	Gamma            kyber.Point
 	A, C, U, W       []kyber.Point
@@ -72,6 +73,7 @@ type ega5 struct {
 type ega6 struct {
 	sh.SimpleShuffle
 }
+//嵌入了另一个结构体
 
 // PairShuffle creates a proof of the correctness of a shuffle
 // of a series of ElGamal pairs.
@@ -100,9 +102,10 @@ type PairShuffle struct {
 
 // Init creates a new PairShuffleProof instance for a k-element ElGamal pair shuffle.
 // This protocol follows the ElGamal Pair Shuffle defined in section 4 of
-// Andrew Neff, "Verifiable Mixing (Shuffling) of ElGamal Pairs", 2004.
+// Andrew Neff, "Verifiable Mixing (Shuffling) of ElGamal Pairs", 2004.          //定义点列表的正确长度
 func (ps *PairShuffle) Init(grp kyber.Group, k int) *PairShuffle {
-
+	//kyber.Group 是 go.dedis.ch/kyber/v4 包中的一个接口，代表一个数学群（Group）。数学群在密码学中有广泛的应用，尤其是在公钥密码系统、数字签名和零知识证明中。
+	//k是排列的个数
 	if k <= 1 {
 		panic("can't shuffle permutation of size <= 1")
 	}
@@ -127,6 +130,13 @@ func (ps *PairShuffle) Prove(
 	pi []int, g, h kyber.Point, beta []kyber.Scalar,
 	X, Y []kyber.Point, rand cipher.Stream,
 	ctx proof.ProverContext) error {
+	/*pi：一个整数数组，表示洗牌的排列。
+	g, h：ElGamal 密钥生成的基点。
+	beta：一个标量数组，用于洗牌中的随机因子。
+	X, Y：原始的 ElGamal 密文对。
+	rand：用于生成随机数的随机流。
+	ctx：零知识证明上下文，用于存储和传递证明过程中生成的数据。
+	*/
 
 	grp := ps.grp
 	k := ps.k
@@ -149,7 +159,7 @@ func (ps *PairShuffle) Prove(
 	w := make([]kyber.Scalar, k)
 	a := make([]kyber.Scalar, k)
 	var tau0, nu, gamma kyber.Scalar
-	ctx.PriRand(u, w, a, &tau0, &nu, &gamma)
+	ctx.PriRand(u, w, a, &tau0, &nu, &gamma)           // PriRand 方法是用来生成随机数并在证明过程中使用。
 
 	// compute public commits
 	p1.Gamma = grp.Point().Mul(gamma, g)
@@ -171,6 +181,7 @@ func (ps *PairShuffle) Prove(
 	p1.Lambda1.Add(p1.Lambda1, XY.Mul(wbetasum, g))
 	p1.Lambda2.Add(p1.Lambda2, XY.Mul(wbetasum, h))
 	if err := ctx.Put(p1); err != nil {
+		//put函数用于将数据存储到一个零知识证明的上下文中.
 		return err
 	}
 
@@ -307,7 +318,7 @@ func (ps *PairShuffle) Verify(
 		return errors.New("invalid PairShuffleProof")
 	}
 
-	return nil
+	return nil              //nil是一个预定义的常量，用来表示指针或接口类型的零值。它表示指针不指向任何有效的内存地址，或者接口不包含任何具体的值。
 }
 
 // Shuffle randomly shuffles and re-randomizes a set of ElGamal pairs,
@@ -316,7 +327,9 @@ func (ps *PairShuffle) Verify(
 // If g or h is nil, the standard base point is used.
 func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 	rand cipher.Stream) (XX, YY, Ybaby []kyber.Point, P proof.Prover) {
-
+	/*Shuffle 函数接收一个密码学群 group、两个点 g 和 h（用于ElGamal加密），以及两个切片 X 和 Y 分别存储了ElGamal加密对的明文和密文部分。rand 是用于生成随机数的密码流。
+	返回值包括 XX、YY 和 Ybaby，它们分别是重排后的明文 Xbar、重排后的密文 Ybar，以及一个用于生成正确性证明的 proof.Prover 函数。
+	*/
 	k := len(X)
 	if k != len(Y) {
 		panic("X,Y vectors have inconsistent length")
@@ -325,9 +338,9 @@ func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 	ps := PairShuffle{}
 	ps.Init(group, k)
 
-	// Pick a random permutation
+	// Pick a random permutation（排列）
 	pi := make([]int, k)
-	for i := 0; i < k; i++ { // Initialize a trivial permutation
+	for i := 0; i < k; i++ { // Initialize a trivial permutation (自然顺序)
 		pi[i] = i
 	}
 	for i := k - 1; i > 0; i-- { // Shuffle by random swaps
@@ -356,6 +369,11 @@ func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 		Ybar[i] = ps.grp.Point().Mul(beta[pi[i]], h)
 		Ybar[i].Add(Ybar[i], Y[pi[i]])
 	}
+	/*创建一个长度为 k 的 beta 数组，每个元素是一个随机的密码学标量。然后对每个加密对 (X[i], Y[i]) 进行ElGamal再随机化：
+	计算 Xbar[i] = beta[pi[i]] * g + X[pi[i]]
+	计算 Ybar[i] = beta[pi[i]] * h + Y[pi[i]]
+	同时，将 Ybar[i] 的临时值存储在 Ytmp[i] 中，这些临时值将在后面的证明中使用。
+	*/
 
 	prover := func(ctx proof.ProverContext) error {
 		return ps.Prove(pi, g, h, beta, X, Y, rand, ctx)
@@ -365,8 +383,17 @@ func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 
 // randUint64 chooses a uniform random uint64
 func randUint64(rand cipher.Stream) uint64 {
+	//rand cipher.Stream用于生成随机比特流。在 Go 语言中，cipher.Stream 是一个接口，它定义了一种生成伪随机数流的方式。
 	b := random.Bits(64, false, rand)
+	/*random.Bits(64, false, rand): 这一行调用了 random 包中的 Bits 函数。它接受三个参数：
+	64: 表示要生成的比特数，即64位。
+	false: 表示生成的比特流是否应为随机化的。在这里，它设置为 false，表示生成真正的随机比特流。
+	rand: 是用于生成比特流的随机数流接口。
+	random.Bits 函数将返回一个长度为64的 byte 数组 b，其中包含随机生成的比特。
+	*/
 	return binary.BigEndian.Uint64(b)
+	//binary.BigEndian.Uint64 函数将一个长度为8的 byte 数组解释为一个大端序（BigEndian）的 uint64 整数。
+	//大端序（Big Endian）是一种字节序的表示方式，它规定数据的高字节存储在内存的低地址端，低字节存储在内存的高地址端。
 }
 
 // Verifier produces a Sigma-protocol verifier to check the correctness of a shuffle.
@@ -378,5 +405,6 @@ func Verifier(group kyber.Group, g, h kyber.Point,
 	verifier := func(ctx proof.VerifierContext) error {
 		return ps.Verify(g, h, X, Y, Xbar, Ybar, ctx)
 	}
+	//创建一个验证者函数，通过定义一个匿名函数，调用Verify函数实现。
 	return verifier
 }
