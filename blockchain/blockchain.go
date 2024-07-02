@@ -32,15 +32,15 @@ type Block struct {
 	PreHash   []byte
 
 	//the body data
-	D           int64 // the last obfuscation 's factor
-	Nb          int64 //the number of blocks have exist
-	Npk         int64 //creator's work number
-	Nd          int64 // the number of data in this block
+	D           int64 // the last obfuscation 's factor    //最后一个混淆因素
+	Nb          int64 //the number of blocks have exist    //已存在的块的数量
+	Npk         int64 //creator's work number              //创建者生成了多少区块
+	Nd          int64 // the number of data in this block  //该块中的数据数
 	MerkelRoot0 []byte
 	MerkelRoot1 []byte
 	PublicKey   []byte
 	//the list <nym(byte),val(float64)>
-	Nyms []byte
+	Nyms []byte                       //切片同时存储了过程值
 	Vals []float64
 }
 
