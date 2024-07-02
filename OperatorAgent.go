@@ -295,10 +295,11 @@ func verifyNeffShuffle(params map[string]interface{}) {
 
 }
 
+//信任值重新绑定
 func rebindReputation(newKeys []kyber.Point, newVals [][]byte, finalKeys []kyber.Point) [][]byte {
 	size := len(newKeys)
-	ret := make([][]byte, size)
-	m := make(map[string][]byte)
+	ret := make([][]byte, size)       //size个[]byte，每一个[]byte还未定义
+	m := make(map[string][]byte)      //创建一个新的映射（map），键类型为字符串（string），值类型为字节切片（[]byte）
 	for i := 0; i < size; i++ {
 		m[newKeys[i].String()] = newVals[i]
 	}
@@ -308,6 +309,7 @@ func rebindReputation(newKeys []kyber.Point, newVals [][]byte, finalKeys []kyber
 	return ret
 }
 
+//该函数将 YbarEn 中的每个点减去 Ytmp 中的对应点，并将结果存储在 Ytmp 中。
 func convertToOrigin(YbarEn, Ytmp []kyber.Point) []kyber.Point {
 	size := len(YbarEn)
 	yyy := make([]kyber.Point, size)
@@ -319,12 +321,12 @@ func convertToOrigin(YbarEn, Ytmp []kyber.Point) []kyber.Point {
 	return Ytmp
 }
 
-// Y is the keys want to shuffle
+// Y is the keys want to shuffle //引入外部包函数为内部函数
 func neffShuffle(X []kyber.Point, Y []kyber.Point, rand cipher.Stream) (Xbar, Ybar, Ytmp []kyber.Point, prover proof.Prover) {
 
 	Xbar, Ybar, Ytmp, prover = shuffle.Shuffle(operatorAgent.Suite, nil, operatorAgent.PublicKey, X, Y, rand)
 
-	return
+	return       //函数直接返回 Shuffle 函数的结果
 }
 
 func handleReverseShuffleOA(params map[string]interface{}) {
@@ -332,7 +334,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	keyList := util.ProtobufDecodePointList(params["keys"].([]byte))
 	size := len(keyList)
 	byteValList := make([][]byte, size)
-	//if reverse_shffle just start(last OA),no need to verify previous shuffle
+	//if reverse_shffle just start(last OA),no need to verify previous shuffle  //如果reverse_shffle刚刚开始(最后一次OA)，则不需要验证之前的洗牌
 	if _, ok := params["is_start"]; ok {
 		intValList := params["vals"].([]float64)
 		for i := 0; i < len(intValList); i++ {
@@ -341,8 +343,8 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	} else {
 		// verify neff shuffle if needed
 		verifyNeffShuffle(params)
-		// deserialize data part
-		byteArr := params["vals"].([]util.ByteArray)
+		// deserialize data part     //反序列化数据部分
+		byteArr := params["vals"].([]util.ByteArray)   //嵌套类型，外面是切片，内部是util.ByteArray结构体
 		for i := 0; i < len(byteArr); i++ {
 			byteValList[i] = byteArr[i].Arr
 		}
@@ -355,8 +357,8 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	for i := 0; i < size; i++ {
 		// decrypt the public key
 		newKeys[i] = operatorAgent.KeyMap[keyList[i].String()]
-		// encrypt the reputation using ElGamal algorithm
-		C := anon.Encrypt(operatorAgent.Suite, byteValList[i], anon.Set(X))
+		// encrypt the reputation using ElGamal algorithm         //匿名加密
+		C := anon.Encrypt(operatorAgent.Suite, byteValList[i], anon.Set(X))  //anon.Set(X)设置公钥
 		newVals[i] = C
 	}
 
@@ -365,7 +367,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	byteNewVals := util.SerializeTwoDimensionArray(newVals)
 
 	if size <= 1 {
-		// no need to shuffle, just send the package to previous server
+		// no need to shuffle, just send the package to previous server   //无需洗牌，只需将包发送到上一个服务器即可
 		pm := map[string]interface{}{
 			"keys": byteNewKeys,
 			"vals": byteNewVals,
@@ -426,7 +428,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		"keys":       byteFinalKeys,
 		"vals":       byteFinalVals,
 		"proof":      prf,
-		"prev_keys":  byteOri,
+		"prev_keys":  byteOri,              //洗牌前的键
 		"prev_vals":  byteNewKeys,
 		"shuffled":   true,
 		"public_key": bytePublicKey,
@@ -447,10 +449,10 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		operatorAgent.EnListm = nil
 		for i := 0; i < len(finalKeys); i++ {
 
-			operatorAgent.AddIntoEecryptedList(finalKeys[i], finalVals[i])
+			operatorAgent.AddIntoEecryptedList(finalKeys[i], finalVals[i])  //当完成反向洗牌时，第一个OA应该存储加密的列表。
 		}
 
-		forwardShuffle()
+		forwardShuffle()        // ？
 		return
 	}
 
@@ -463,6 +465,7 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 	valList := params["vals"].([]util.ByteArray)
 	size := len(keyList)
 
+	//如果 params 中包含 g，则从 params 中提取并解码 g，并对其进行一些处理。如果没有包含 g，则创建一个新的点 g。
 	if val, ok := params["g"]; ok {
 		// contains g
 		byteG := val.([]byte)
@@ -476,6 +479,7 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 		g = operatorAgent.Suite.Point().Mul(operatorAgent.Roundkey, nil)
 	}
 
+	//初始化新键和值的切片:
 	X1 := make([]kyber.Point, 1)
 	X1[0] = operatorAgent.PublicKey
 	//store the en/decrypt key&&val
@@ -492,7 +496,7 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 		// update key map (nym->publickey)
 		operatorAgent.KeyMap[newKeys[i].String()] = keyList[i]
 	}
-	//turn the nym//val and gm to byte
+	//turn the nym//val and gm to byte    //将数据编码为字节数组:
 	byteNewKeys := util.ProtobufEncodePointList(newKeys)
 	byteNewVals := util.SerializeTwoDimensionArray(newVals)
 	byteG, err := g.MarshalBinary()
@@ -533,6 +537,7 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 	//has problem,just use the randomstream
 	rand := random.New()
 	//rand := operatorAgent.Suite.Cipher(abstract.RandomKey)
+	
 	// *** perform neff shuffle here ***
 	Xbar, Ybar, Ytmp, prover := neffShuffle(Xori, newKeys, rand)
 	prf, err := proof.HashProve(operatorAgent.Suite, "PairShuffle", prover)
@@ -548,8 +553,8 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 	byteFinalKeys := util.ProtobufEncodePointList(finalKeys)
 	byteFinalVals := util.SerializeTwoDimensionArray(finalVals)
 	bytePublicKey, _ := operatorAgent.PublicKey.MarshalBinary()
+	
 	// prev keys means the key before shuffle
-
 	pm := map[string]interface{}{
 		"xbar":       byteXbar,
 		"ybar":       byteYbar,
@@ -579,20 +584,21 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 		}
 
 		operatorAgent.G = g
-		syncListm(byteG)
+		syncListm(byteG)      //   ？
 		return
 	}
 
 }
 
-//Sync Rep List to APs
+//Sync Rep List to APs   //实现了同步新的声誉列表到访问点 (Access Points) 和处理区块链的逻辑。
 func handleSyncRepList(params map[string]interface{}) {
 
 	lenth := len(operatorAgent.OAList)
 	byteG := params["g"].([]byte)
 
+	//如果当前节点不是最后一个 OA 节点，则将新列表存储在 operatorAgent 中，并初始化 U 映射。
 	if operatorAgent.LocalAddress != operatorAgent.OAList[lenth-1] {
-		//except last oa,other oas should stored the new list first
+		//except last oa,other oas should stored the new list first    //除最后一个oa外，其他oa应首先存储新列表
 		nymList := util.ProtobufDecodePointList(params["nyms"].([]byte))
 		valList := params["vals"].([]float64)
 		operatorAgent.Listm = nil
@@ -613,7 +619,7 @@ func handleSyncRepList(params map[string]interface{}) {
 
 		createBlockChain(byteG)
 	} else {
-		//else create a new block and add to block chain
+		//else create a new block and add to block chain  //否则创建一个新区块并添加到区块链中
 		fmt.Println("[OA] Insert the attached new list to block and add this block to blockchain.")
 		operatorAgent.BlockChain.AddBlock(createNewBlock(byteG))
 	}
