@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"encoding/binary"
-	"encoding/gob"
+	"encoding/gob"  //用于进行对象序列化和反序列化。具体来说，它可以将 Go 的数据结构（如结构体、数组、切片、映射等）编码成字节流，方便在网络上传输或者持久化存储；
 	"errors"
 	"log"
 	"math"
@@ -48,9 +48,10 @@ func SortMap(mp map[string]string) []string {
 	return finalList
 }
 
+将二位字节切片转换为ByteArray切片
 func SerializeTwoDimensionArray(arr [][]byte) []ByteArray {
 	byteArr := make([]ByteArray, len(arr))
-	gob.Register(byteArr)
+	gob.Register(byteArr) //试图使用 gob.Register 注册 byteArr 类型，以便在 gob 编码和解码过程中识别它   //gob.Register(ByteArray{})
 	for i := 0; i < len(arr); i++ {
 		byteArr[i].Arr = arr[i]
 	}
