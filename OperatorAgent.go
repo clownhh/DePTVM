@@ -744,13 +744,14 @@ func VerifyBlock(signBK []byte, block *blockchain.Block, publicKey kyber.Point) 
 	var intDiff big.Int
 	var intTAG big.Int
 	var ok bool
+	//把困难值和哈希值转化成大整数方便计算
 	intTAG.SetString(blockchain.TAG, 16)
 	intDiff.SetBytes(blockchain.ComputeDiff(intTAG, block.Npk, block.Nb))
 	hash = blockchain.SetHash(block.K0, block.PreHash, block.MerkelRoot0, block.MerkelRoot1, block.PublicKey, block.Timestamp)
 	intHash.SetBytes(hash[:])
 
-	//records's and listm's merkle root ,verify the correction of block's update
-	items0 := [][]byte{(util.ToByteRecords(operatorAgent.Records))}
+	//records's and listm's merkle root ,verify the correction of block's update  //记录和计算哈希值
+	items0 := [][]byte{(util.ToByteRecords(operatorAgent.Records))}   //信任值数据转化为字节
 	_, _, byteList := listConversion()
 	items1 := [][]byte{(byteList)}
 	MerkelRoot0 := blockchain.GetMerkleRoot(items0)
@@ -765,6 +766,11 @@ func VerifyBlock(signBK []byte, block *blockchain.Block, publicKey kyber.Point) 
 	} else {
 		//check work proof && records && listm is same
 		if intHash.Cmp(&intDiff) == -1 && bytes.Equal(MerkelRoot0, block.MerkelRoot0) && bytes.Equal(MerkelRoot1, block.MerkelRoot1) {
+			/*intHash.Cmp(&intDiff) 方法用于比较两个大整数。这个方法返回三个值之一：
+			-1 表示 intHash 小于 intDiff；0 表示 intHash 等于 intDiff；1 表示 intHash 大于 intDiff
+			这里的条件 intHash.Cmp(&intDiff) == -1 表示 intHash 小于 intDiff。这通常用于验证工作量证明 (Proof of Work)，即计算出的哈希值是否小于目标难度值。
+      			后边两个条件的意思是验证计算的Merkel树的根是一致的。
+			*/
 			ok = true
 			//fmt.Println("[OA] Block verify success!")
 
@@ -778,16 +784,19 @@ func VerifyBlock(signBK []byte, block *blockchain.Block, publicKey kyber.Point) 
 
 }
 
-//listening to OA's status,stop receive blocks after theta seconds
+//listening to OA's status,stop receive blocks after theta seconds  //监听OA的状态，在theta秒后停止接收阻塞；实现了一个倒计时监听器，用于在特定时间后停止接收区块
 func CountDownListening() {
 
+	//当操作代理的状态是 EVALUE、READY 或 MINE 时，循环等待状态变化
 	for operatorAgent.MineStatus == EVALUE || operatorAgent.MineStatus == READY || operatorAgent.MineStatus == MINE {
 		//wait util status change to receive
 	}
+	//状态变为 RECEIVE 时启动倒计时
 	if operatorAgent.MineStatus == RECEIVE {
 		for i := blockchain.Theta; i >= blockchain.INTERVAL; i = i - blockchain.INTERVAL {
 			fmt.Printf("[OA] Stop receive blocks after %d milliseconds...\n", i)
 			time.Sleep(blockchain.INTERVAL * time.Millisecond)
+			//进入倒计时，间隔时间 blockchain.INTERVAL 毫秒，每次减少这个间隔，直到总时间 blockchain.Theta 用完。
 		}
 		operatorAgent.MineStatus = FINISH
 		fmt.Println("[OA] Stop receive blocks now!")
@@ -804,8 +813,10 @@ func CountDownListening() {
 	return
 }
 
+//实现了共识过程结束后的操作，具体包括将赢家区块添加到区块链、接受赢家区块的列表、重置状态和存储等步骤
 func consensusEnd() {
 
+	//添加胜出的区块
 	operatorAgent.BlockChain.AddBlock(operatorAgent.winner_block)
 
 	//accept the winner block's listm
