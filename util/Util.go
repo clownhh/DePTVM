@@ -188,10 +188,10 @@ type basicSig struct {
 
 // Returns a secret that depends on on a message and a point
 func hashSchnorr(suite Suite, message []byte, p kyber.Point) kyber.Scalar {
-	pb, _ := p.MarshalBinary()
-	c := suite.XOF(pb)   //随机扩展输出
-	c.Write(message)   //message写入c
-	return suite.Scalar().Pick(c) //从随机源c中选择一个伪随机标量值
+	pb, _ := p.MarshalBinary()       //将椭圆曲线点p序列化为二进制
+	c := suite.XOF(pb)               //创建一个伪随机生成器，使用p的二进制形式作为种子
+	c.Write(message)                 //将消息写入伪随机生成器
+	return suite.Scalar().Pick(c)    //从伪随机生成器中选择一个伪随机标量值
 }
 
 // This simplified implementation of Schnorr Signatures is based on
