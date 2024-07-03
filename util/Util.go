@@ -4,7 +4,7 @@ package util
 import (
 	"bytes"
 	"crypto/cipher"
-	"encoding/binary"
+	"encoding/binary" //用于在不同的数据表示（如字节序列和数值类型）之间进行转换。它提供了将基本数据类型（如整数、浮点数等）编码为字节序列以及将字节序列解码为基本数据类型的功能。
 	"encoding/gob"  //用于进行对象序列化和反序列化。具体来说，它可以将 Go 的数据结构（如结构体、数组、切片、映射等）编码成字节流，方便在网络上传输或者持久化存储；
 	"errors"
 	"log"
@@ -82,13 +82,14 @@ func SendToAccessPoint(conn *net.UDPConn, content []byte) {
 //下划线 _ 被称为“空白标识符”（blank identifier）。它用于忽略不需要使用的值或变量。
 //使用空白标识符时，表示你明确知道有个值存在，但你不需要这个值，因此可以用 _ 来占位，避免编译器报错未使用变量的错误。
 
+//将一个 int64 类型的整数转换为大端序字节数组
 func ToHexInt(num int64) []byte {
 	buff := new(bytes.Buffer)
-	err := binary.Write(buff, binary.BigEndian, num)
+	err := binary.Write(buff, binary.BigEndian, num) //使用 binary.Write 函数将 int64 类型的整数 num 按照大端序（binary.BigEndian）写入到缓冲区 buff 中。
 	if err != nil {
 		log.Panic(err)
 	}
-	return buff.Bytes()
+	return buff.Bytes()    //将缓冲区的字节内容作为字节数组返回
 }
 
 func ToByteRecords(records []Record) []byte {
