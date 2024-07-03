@@ -180,7 +180,7 @@ type Suite interface {
 	kyber.XOFFactory
 }
 
-// A basic, verifiable signature
+// A basic, verifiable signature   //基本的、可验证的签名
 type basicSig struct {
 	C kyber.Scalar // challenge
 	R kyber.Scalar // response
@@ -198,6 +198,7 @@ func hashSchnorr(suite Suite, message []byte, p kyber.Point) kyber.Scalar {
 // crypto/anon/sig.go
 // The ring structure is removed and
 // The anonimity set is reduced to one public key = no anonimity
+//该Schnorr签名的简化实现基于crypto/anon/sig。去掉环结构，匿名集缩减为一个公钥=无匿名性
 func SchnorrSign(suite Suite, random cipher.Stream, message []byte,
 	privateKey kyber.Scalar) []byte {
 
@@ -224,16 +225,16 @@ func SchnorrSign(suite Suite, random cipher.Stream, message []byte,
 func SchnorrVerify(suite Suite, message []byte, publicKey kyber.Point,
 	signatureBuffer []byte) error {
 
-	// Decode the signature
+	// Decode the signature  //解码签名
 	buf := bytes.NewBuffer(signatureBuffer)
 	sig := basicSig{}
-	if err := suite.Read(buf, &sig); err != nil {
+	if err := suite.Read(buf, &sig); err != nil {   //suite.Read 方法用于从 buf 中读取数据并填充到 sig 结构体中。
 		return err
 	}
 	r := sig.R
 	c := sig.C
 
-	// Compute base**(r + x*c) == T
+	// Compute base**(r + x*c) == T      
 	var P, T kyber.Point
 	P = suite.Point()
 	T = suite.Point()
@@ -248,6 +249,7 @@ func SchnorrVerify(suite Suite, message []byte, publicKey kyber.Point,
 
 	return nil
 }
+
 func ElGamalEncrypt(group kyber.Group, pubkey kyber.Point, message []byte) (
 	K, C kyber.Point, remainder []byte) {
 
