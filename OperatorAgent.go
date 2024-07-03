@@ -390,6 +390,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 				operatorAgent.AddIntoEecryptedList(newKeys[i], newVals[i])
 			}
 			fmt.Println("[OA] The shuffle of forward direction will start.")
+			
 			return
 		}
 
@@ -421,6 +422,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	byteFinalKeys := util.ProtobufEncodePointList(finalKeys)
 	byteFinalVals := util.SerializeTwoDimensionArray(finalVals)
 	bytePublicKey, _ := operatorAgent.PublicKey.MarshalBinary()
+	
 	// prev keys means the key before shuffle
 	pm := map[string]interface{}{
 		"xbar":       byteXbar,
@@ -434,6 +436,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		"public_key": bytePublicKey,
 	}
 	event := &proto.Event{proto.REVERSE_SHUFFLE, pm}
+	
 	// reset RoundKey and key map
 	operatorAgent.Roundkey = operatorAgent.Suite.Scalar().Pick(random.New())
 	operatorAgent.KeyMap = make(map[string]kyber.Point)
@@ -527,11 +530,13 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 
 		return
 	}
+	
 	//store the OA's privateKey (copy it to the num of vals)
 	Xori := make([]kyber.Point, len(newVals))
 	for i := 0; i < size; i++ {
 		Xori[i] = operatorAgent.Suite.Point().Mul(operatorAgent.PrivateKey, nil)
 	}
+	
 	//turn it to byte
 	byteOri := util.ProtobufEncodePointList(Xori)
 	//has problem,just use the randomstream
@@ -618,13 +623,14 @@ func handleSyncRepList(params map[string]interface{}) {
 		//if it's the first round ,OA should create blockchain
 
 		createBlockChain(byteG)
+		
 	} else {
 		//else create a new block and add to block chain  //否则创建一个新区块并添加到区块链中
 		fmt.Println("[OA] Insert the attached new list to block and add this block to blockchain.")
 		operatorAgent.BlockChain.AddBlock(createNewBlock(byteG))
 	}
 
-	//send the new list to aps that deployed by it
+	//send the new list to aps that deployed by it      //将新列表发送给它部署的ap
 	event := &proto.Event{proto.SYNC_REPMAP, params}
 	for _, APAddr := range operatorAgent.APList {
 		fmt.Println("[OA] Send the new reputation list to AccessPoint:", APAddr)
@@ -636,7 +642,7 @@ func handleSyncRepList(params map[string]interface{}) {
 }
 
 /*
-//handle the signal sync event
+//handle the signal sync event    //处理同步事件
 func handleSignalSync(params map[string]interface{}, operatorAgent *OperatorAgent, addr *net.UDPAddr) {
 	if ok, _ := params["READY"].(bool); ok == true {
 		fmt.Println("[OA] Recieve the sync signal from:", addr)
@@ -647,6 +653,7 @@ func handleSignalSync(params map[string]interface{}, operatorAgent *OperatorAgen
 
 }
 */
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //function of blockchain
 ///////////////////////////////////
@@ -665,33 +672,37 @@ func createBlockChain(gm []byte) {
 
 }
 
+//该函数用于将操作代理的 Listm 转换为三个不同的列表：一个字节数组列表、一个浮点数列表和一个合并的字节数组。
 func listConversion() ([]byte, []float64, []byte) {
+	//初始化
 	byteList := [][]byte{}
-	nymList := []kyber.Point{}
-
+	nymList := []kyber.Point{}    // kyber.Point 类型的空切片
 	valList := []float64{}
+
+	//遍历 Listm 并填充列表
 	for _, v := range operatorAgent.Listm {
 		nymList = append(nymList, v.Nym)
 		valList = append(valList, v.Val)
 		byteList = append(byteList, util.Float64ToByte(v.Val))
 	}
 	byteNym := util.ProtobufEncodePointList(nymList)
-	byteList = append(byteList, byteNym)
+	byteList = append(byteList, byteNym)     //字节数组，全部的声誉值在前，全部的假名在后
 
 	return byteNym, valList, bytes.Join(byteList, []byte{})
 }
 
+//创建区块链的创世区块，初始化了区块链的一些基础数据
 func genesisBlock(gm []byte) *blockchain.Block {
-	var K0 int64 = 0 //set the GenesisBlock 's serial number is 1
-	var timestamp int64 = 0
-	var prehash []byte = []byte{}
-	var mr0 []byte = []byte{}
+	var K0 int64 = 0 //set the GenesisBlock 's serial number is 1  //序列号设置
+	var timestamp int64 = 0   // 时间戳初始化为0
+	var prehash []byte = []byte{}    // 前一个区块的哈希值为空，因为这是第一个区块
+	var mr0 []byte = []byte{}    // Merkle根0初始化为空
 
-	//mr1 is the merkle root constructed with Lm and gm
+	//mr1 is the merkle root constructed with Lm and gm    // mr1 是用 Lm 和 gm 构造的 Merkle 根
 	var D int64 = 0
-	nyms, vals, byteList := listConversion()
-	items := [][]byte{(byteList), (gm)}
-	mr1 := blockchain.GetMerkleRoot(items)
+	nyms, vals, byteList := listConversion()    // 获取当前假名和信任值的转换后的字节数组
+	items := [][]byte{(byteList), (gm)}       // 将 byteList 和 gm 放入一个二维字节数组中
+	mr1 := blockchain.GetMerkleRoot(items)    // 计算 Merkle 根1
 
 	pk, _ := operatorAgent.PublicKey.MarshalBinary()
 	var npk int64 = 0
