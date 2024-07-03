@@ -20,7 +20,7 @@ const (
 	TAG      = "000fffffffffffffffffffffffffffffeecfae81b1b9b3c908810b10a1b56001" //A basic difficulty.
 	Nbr      = 10                                                                 //The threshold of the number of blocks that a miner has created.
 	Ntr      = 50                                                                 //The threshold number of APs whose provided trust-related data in a block
-	Theta    = 1500                                                               //recieve window
+	Theta    = 1500                                                               //recieve window  //监听多久之后，阻塞进程
 	INTERVAL = 750                                                                //time interval
 )
 
