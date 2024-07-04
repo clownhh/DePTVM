@@ -964,7 +964,6 @@ func handleReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAg
 				operatorAgent.MineStatus = RECEIVE
 				if operatorAgent.winner_block != nil {
 					operatorAgent.winner_block = blockchain.BlockWinnnerSelection(operatorAgent.winner_block, block)
-
 				} else {
 					operatorAgent.winner_block = block
 				}
@@ -975,7 +974,6 @@ func handleReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAg
 
 				if operatorAgent.winner_block != nil {
 					operatorAgent.winner_block = blockchain.BlockWinnnerSelection(operatorAgent.winner_block, block)
-
 				} else {
 					operatorAgent.winner_block = block
 				}
@@ -989,6 +987,7 @@ func handleReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAg
 	}
 }
 
+//用于接收、解析和验证传入的区块，并返回验证结果和区块本身。该函数根据提供的参数对区块进行解码，并验证其有效性。
 func ReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAgent, addr *net.UDPAddr) (bool, *blockchain.Block) {
 
 	signBK, _ := Params["SignBK"].([]byte)
