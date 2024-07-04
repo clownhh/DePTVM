@@ -848,11 +848,14 @@ func consensusEnd() {
 
 func startMine() {
 
+	//检查挖矿状态
 	if operatorAgent.MineStatus == READY {
 		fmt.Println("[OA] Start mining...")
 		operatorAgent.MineStatus = MINE
 
+		//获取最新区块信息
 		previousBlock := operatorAgent.BlockChain.PreviousBlock() //get the latest block
+		//设置新块的各种属性
 		K0 := previousBlock.K0 + 1
 		var D int64 = 0
 		var Nb int64 = int64(len(operatorAgent.BlockChain.Blocks))
@@ -863,6 +866,8 @@ func startMine() {
 		var intTAG big.Int
 		intTAG.SetString(blockchain.TAG, 16)
 		intDiff.SetBytes(blockchain.ComputeDiff(intTAG, Npk, Nb))
+		
+		//计算HASH
 		var hash []byte
 		PreHash := previousBlock.BlockHash() //set the prehash
 		MerkelRoot0 := []byte{}
@@ -878,6 +883,7 @@ func startMine() {
 		var t int64 = 0 //timestamp
 
 		//find the t
+		//计算目标哈希值 (intDiff)，并在一个循环中逐步增加时间戳 t 进行哈希计算，直到找到满足条件的哈希值。如果在这个过程中操作代理的状态变为 RECEIVE，则停止挖矿。
 		for t < math.MaxInt64 {
 			if operatorAgent.MineStatus == RECEIVE {
 				fmt.Println("[OA] Recieve the other block and stop mining!")
@@ -885,6 +891,8 @@ func startMine() {
 			} else {
 				hash = blockchain.SetHash(K0, PreHash, MerkelRoot0, MerkelRoot1, Pk, t)
 				intHash.SetBytes(hash[:])
+
+				//当找到符合难度要求的哈希值时，构建一个新的区块，将其设置为赢家区块 (winner_block)，并发布该区块。
 				if intHash.Cmp(&intDiff) == -1 {
 					operatorAgent.MineStatus = RECEIVE
 					//insert data to the new block
@@ -892,7 +900,7 @@ func startMine() {
 
 					fmt.Println("[OA] Mining success !")
 					if operatorAgent.winner_block != nil {
-						operatorAgent.winner_block = blockchain.BlockWinnnerSelection(operatorAgent.winner_block, new_block)
+						operatorAgent.winner_block = blockchain.BlockWinnnerSelection(operatorAgent.winner_block, new_block) //选择赢的区块
 					} else {
 						operatorAgent.winner_block = new_block
 					}
@@ -913,10 +921,10 @@ func startMine() {
 }
 
 //receive block and verify , then select winner block
-
+//收到新块时处理相应逻辑。该函数根据当前的挖矿状态 (MineStatus)，决定是否接受新的区块并进行验证和处理。
 func handleReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAgent, addr *net.UDPAddr) {
 
-	if operatorAgent.MineStatus == FREE {
+	if operatorAgent.MineStatus == FREE {   //在 FREE 状态下，操作代理不处于区块共识阶段，但如果接收到块，将调用 ReceiveBlock 处理，并通过 BlockWinnnerSelection 方法选择获胜块。
 		fmt.Println("[OA] This is not the block consensus stage but recieve a block.")
 		ok, block := ReceiveBlock(Params, operatorAgent, addr)
 		if ok {
@@ -927,7 +935,7 @@ func handleReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAg
 			}
 		}
 
-	} else {
+	} else {     //根据不同的挖矿状态 (EVALUE、MINE、READY、RECEIVE、FINISH) 执行相应的逻辑。
 		fmt.Println("[OA] Recieve new block from :", addr, "start to verify block and check accept window.")
 		ok, block := ReceiveBlock(Params, operatorAgent, addr)
 		if ok {
