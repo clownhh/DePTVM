@@ -997,20 +997,20 @@ func ReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAgent, a
 	return ok, &block
 }
 
-//publish block to OAs
+//publish block to OAs   //用于在区块生成后，将区块广播给网络中的其他操作代理
 func PublishBlock(block *blockchain.Block, operatorAgent *OperatorAgent, eventType int) {
-
-	signBK := util.SchnorrSign(operatorAgent.Suite, random.New(), block.BlockHash(), operatorAgent.PrivateKey)
-	byteBlock := blockchain.ToByteBlock(*block)
+	
+	signBK := util.SchnorrSign(operatorAgent.Suite, random.New(), block.BlockHash(), operatorAgent.PrivateKey)  //使用 Schnorr 签名算法对区块的哈希值进行签名
+	byteBlock := blockchain.ToByteBlock(*block)    /将区块转换为字节数组
 	//bytePublickey, _ := operatorAgent.PublicKey.MarshalBinary()
 	pm := map[string]interface{}{
 		"Block":  byteBlock,
 		"SignBK": signBK,
 	}
 
-	event := &proto.Event{eventType, pm}
+	event := &proto.Event{eventType, pm}   //创建一个包含区块和签名的事件 event，并指定事件类型 eventType
 
-	//send to OA except itself
+	//send to OA except itself    //遍历所有的 OA 地址（除了自身），将事件编码并通过网络发送给这些 OA。
 	for _, Addr := range operatorAgent.OAList {
 		if Addr.String() != operatorAgent.LocalAddress.String() {
 
