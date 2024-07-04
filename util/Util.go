@@ -155,9 +155,14 @@ func ProtobufDecodePointList(bytes []byte) []kyber.Point {
 	*/
 }
 
+//用于将一个浮点数四舍五入到小数点后6位
 func FloatRound(f float64) float64 {
 
 	res, _ := decimal.NewFromFloat(f).Round(6).Float64()
+	/*decimal.NewFromFloat(f)：将浮点数 f 转换为 decimal.Decimal 类型。
+	.Round(6)：将 decimal.Decimal 类型的数值四舍五入到小数点后6位。
+	.Float64()：将 decimal.Decimal 类型的结果转换回 float64 类型。
+	*/
 	return res
 }
 
