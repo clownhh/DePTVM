@@ -1083,7 +1083,7 @@ func trustValueUpdate(operatorAgent *OperatorAgent) {
 	fmt.Println("[OA] Start trust value update...")
 	//do the trust value update
 
-	//read normal model
+	//read normal model  //读取正常模型
 	var normal_model []float64 = nil
 	opencast1, err1 := os.Open("./datasets/normal_model.csv")
 	if err1 != nil {
@@ -1123,7 +1123,8 @@ func trustValueUpdate(operatorAgent *OperatorAgent) {
 	//=============================================================================================testtestetstetstestse
 	
 	fmt.Println(normal_model, abnormal_model)
-	
+
+	////初始化正常/异常行为的计数器
 	//the number of normal/abnormal behavious
 	var IN map[string]int = make(map[string]int)
 	var IA map[string]int = make(map[string]int)
@@ -1144,8 +1145,10 @@ func trustValueUpdate(operatorAgent *OperatorAgent) {
 	fmt.Println(len(operatorAgent.Records))
 	fmt.Println(operatorAgent)
 	//stastic the number of 2 type behavious
+	////统计正常和异常行为的数量
 	for i := 0; i < len(operatorAgent.Records); i++ {
 
+		//计算异常模型和正常模型与记录数据之间的距离，然后根据距离判断该记录是异常行为还是正常行为。
 		if computeDistance(abnormal_model, operatorAgent.Records[i].Data) <= computeDistance(normal_model, operatorAgent.Records[i].Data) {
 			IA[operatorAgent.Records[i].Nym.String()]++
 		} else {
@@ -1156,19 +1159,27 @@ func trustValueUpdate(operatorAgent *OperatorAgent) {
 		fmt.Println(operatorAgent.Records[i].Nym.String(),IN[operatorAgent.Records[i].Nym.String()])
 	}
 
+	//更新每个组的信任值
 	for index, group := range operatorAgent.Listm {
 
 		var newTrustValue float64 = 0.0
+		//time_factor 计算时间因子，它基于当前轮次 K 和存储在 operatorAgent.U 中的时间差值。时间因子用于调整信任值，基于行为的时间变化进行指数衰减。
 		time_factor := math.Exp(-1.0 * math.Abs(float64(K-operatorAgent.U[group.Nym.String()])) / t)
+		//避免除以零的情况：
 		if float64(IN[group.Nym.String()]) == 0.0 {
 			IN[group.Nym.String()] = 1
 		}
+		//计算异常行为因子：
 		abnormal_factor := k * float64(IA[group.Nym.String()])
 
 		newTrustValue = (1.0/(time_factor+1.0))*
 			(float64(IN[group.Nym.String()])-abnormal_factor)/(float64(IN[group.Nym.String()])+abnormal_factor) +
 			(time_factor/(time_factor+1.0))*group.Val
+		/*第一部分 ((1.0/(time_factor+1.0)) * (float64(IN[group.Nym.String()])-abnormal_factor) / (float64(IN[group.Nym.String()])+abnormal_factor)) 计算行为对信任值的影响，考虑了正常和异常行为的数量。
+		第二部分 (time_factor/(time_factor+1.0))*group.Val 计算时间对信任值的影响，平滑地将旧信任值 group.Val 与新计算的部分结合起来。
+		*/
 
+		//更新信任值和时间：
 		operatorAgent.Listm[index].Val = util.FloatRound(newTrustValue)
 		operatorAgent.U[group.Nym.String()] = int(operatorAgent.BlockChain.PreviousBlock().K0 + 1)
 	}
