@@ -820,7 +820,7 @@ func consensusEnd() {
 	operatorAgent.BlockChain.AddBlock(operatorAgent.winner_block)
 
 	//accept the winner block's listm
-	nymList := util.ProtobufDecodePointList(operatorAgent.winner_block.Nyms)
+	nymList := util.ProtobufDecodePointList(operatorAgent.winner_block.Nyms)    //假名列表需要反序列后再存储
 	size := len(nymList)
 	operatorAgent.Listm = make([]util.Pair, size)
 	for i := 0; i < size; i++ {
@@ -828,9 +828,9 @@ func consensusEnd() {
 		operatorAgent.Listm[i].Val = operatorAgent.winner_block.Vals[i]
 	}
 
-	//when finish a consensus round, OA should reset status and storage
+	//when finish a consensus round, OA should reset status and storage     //重置状态和存储 //这里检查当前操作代理的公钥是否与前一个区块的公钥相同，如果相同，则增加 Npk 的值。
 	bytePK, _ := operatorAgent.PublicKey.MarshalBinary()
-	if reflect.DeepEqual(operatorAgent.BlockChain.PreviousBlock().PublicKey, bytePK) {
+	if reflect.DeepEqual(operatorAgent.BlockChain.PreviousBlock().PublicKey, bytePK) {       //reflect.DeepEqual 深度比较两个值是否相等的函数
 		fmt.Println("[OA] The block you created is chosen as the winner block of this round.")
 		operatorAgent.Npk++
 	}
