@@ -1023,6 +1023,7 @@ func PublishBlock(block *blockchain.Block, operatorAgent *OperatorAgent, eventTy
 /////////////////////////////////////////////////////////////
 /////////function of trust value update
 
+//用于向云服务提供商（CSP，Cloud Service Provider）发送数据收集请求。这个函数将请求封装为一个事件，并通过网络发送给 CSP。
 func dataCollectionOA() {
 
 	pm := map[string]interface{}{
@@ -1034,14 +1035,16 @@ func dataCollectionOA() {
 
 }
 
+//用于处理从云服务提供商（CSP）接收的数据收集请求，并验证接收的数据的签名是否有效。如果数据有效，则将其存储到本地记录中。
 func handleDataColletionOA(params map[string]interface{}, operatorAgent *OperatorAgent) {
+	//检查是否接收到 "Start" 标志
 	Nym := operatorAgent.Suite.Point()
 	if ok, _ := params["Start"].(bool); ok == true {
 		fmt.Println("[OA] Recieve the trust value related data from Cloud Service Provider...", srcAddr)
 
 	}
 	//verify the signature and store the record to local records
-
+	// 签名验证成功，将记录存储到本地
 	Nym.UnmarshalBinary(params["Nym"].([]byte))
 	Data := params["Data"].([]float64)
 	record := util.Record{Nym, Data}
@@ -1051,6 +1054,7 @@ func handleDataColletionOA(params map[string]interface{}, operatorAgent *Operato
 	//==========================================================test===============================
 	//fmt.Println(operatorAgent.CSPKeyList[srcAddr.String()])
 	if err == nil {
+		// 签名验证成功，将记录存储到本地
 		//fmt.Println("[OA] The sign of Cloud Service Provider verify success!")
 		//store record to local
 		//=================================================test================================
@@ -1062,6 +1066,7 @@ func handleDataColletionOA(params map[string]interface{}, operatorAgent *Operato
 		//fmt.Println("[OA] The sign of Cloud Service Provider verify failed!")
 	}
 
+	//  检查是否接收到 "Done" 标志
 	if done, _ := params["Done"].(bool); done == true {
 		//print data time
 		fmt.Println(record)
