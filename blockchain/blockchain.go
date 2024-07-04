@@ -30,7 +30,7 @@ type BlockChain struct {
 
 //set Block's listm to type byte   //区块结构
 type Block struct {
-	K0        int64
+	K0        int64           //块序号
 	Timestamp int64
 	PreHash   []byte
 
