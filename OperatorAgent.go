@@ -1192,6 +1192,7 @@ func trustValueUpdate(operatorAgent *OperatorAgent) {
 }
 
 /*
+//向其他操作代理（OA）发送准备挖矿的信号
 func sendSinalToOAs(operatorAgent *OperatorAgent) {
 	// set the parameters to register
 	params := map[string]interface{}{
@@ -1208,6 +1209,7 @@ func sendSinalToOAs(operatorAgent *OperatorAgent) {
 
 }
 */
+//计算两个浮点数数组之间的欧几里得距离
 func computeDistance(a, b []float64) float64 {
 
 	//Distance
@@ -1216,6 +1218,7 @@ func computeDistance(a, b []float64) float64 {
 
 	for i := 0; i < len(a); i++ {
 		d = d + math.Abs(a[i]-b[i])*math.Abs(a[i]-b[i])
+		//对于每个元素，计算 a[i] 和 b[i] 之间的差值的绝对值，并将其平方，然后加到距离变量 d 中。
 	}
 
 	d = math.Sqrt(d)
