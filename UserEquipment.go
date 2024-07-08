@@ -166,7 +166,7 @@ func handleSyncRepUE(params map[string]interface{}, userEquipment *UserEquipment
 	// deserialize g and calculate nym
 	g.UnmarshalBinary(params["g"].([]byte))
 	//反序列化 ？    .([]byte))是一个类型断言  结果存储在g
-	nym := userEquipment.Suite.Point().Mul(userEquipment.PrivateKey, g)  ？
+	nym := userEquipment.Suite.Point().Mul(userEquipment.PrivateKey, g)    //？
 	//set UE'S parameters
 	userEquipment.G = g
 	userEquipment.OnetimePseudoNym = nym
