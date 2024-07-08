@@ -1528,6 +1528,7 @@ func forwardShuffle() {
 
 }
 
+//负责将操作代理 (operatorAgent) 中的 Listm（声誉列表）同步到所有其他操作代理（包括自身）
 func syncListm(byteG []byte) {
 	// add clients into reputation map
 	// construct the parameters
@@ -1552,36 +1553,41 @@ func syncListm(byteG []byte) {
 	event := &proto.Event{proto.SYNC_REPMAP, params}
 
 	//the last OA sends new listm to all OAs(including itself)
-
+	//发送同步事件
 	for _, OAAddr := range operatorAgent.OAList {
 		util.Send(operatorAgent.Socket, OAAddr, util.Encode(event))
 	}
 }
 
+//负责更新操作代理（operatorAgent）的拓扑结构，包括其前一跳（PreviousHop）、后一跳（NextHop）以及是否为最后一个操作代理（IsLastOA）
 func updateTopology() {
 	TopologyConfig := util.ReadTopologyConfig()
-	list := util.SortMap(TopologyConfig)
+	list := util.SortMap(TopologyConfig)   //升序排序
 
+	//每个值解析为UDP地址，并将其添加到 operatorAgent.OAList 中，同时处理解析过程中可能发生的错误。
 	for _, v := range list {
 		addr, err := net.ResolveUDPAddr("udp", v)
 		util.CheckErr(err)
 		operatorAgent.OAList = append(operatorAgent.OAList, addr)
 	}
 
+	//设置 operatorAgent 的前跳和后跳代理，并确定它是否是最后一个代理
 	for index, OAAddr := range operatorAgent.OAList {
+		//检查当前OA地址是否等于本地地址
 		if reflect.DeepEqual(OAAddr.String(), operatorAgent.LocalAddress.String()) {
+			// 如果当前OA是列表中的第一个
 			if index == 0 {
-				operatorAgent.PreviousHop = nil
-				operatorAgent.NextHop = operatorAgent.OAList[1]
-			} else if index == len(operatorAgent.OAList)-1 {
-				operatorAgent.PreviousHop = operatorAgent.OAList[index-1]
-				operatorAgent.NextHop = nil
-				operatorAgent.IsLastOA = true
-			} else {
-				operatorAgent.PreviousHop = operatorAgent.OAList[index-1]
-				operatorAgent.NextHop = operatorAgent.OAList[index+1]
-			}
-			break
+				operatorAgent.PreviousHop = nil  // 前跳代理为空
+				operatorAgent.NextHop = operatorAgent.OAList[1]    // 后跳代理为列表中的第二个
+			} else if index == len(operatorAgent.OAList)-1 {        // 如果当前OA是列表中的最后一个
+				operatorAgent.PreviousHop = operatorAgent.OAList[index-1]    // 前跳代理为列表中的倒数第二个
+				operatorAgent.NextHop = nil    //// 后跳代理为空
+				operatorAgent.IsLastOA = true    // 标记为最后一个OA
+			} else {         // 如果当前OA既不是第一个也不是最后一个
+				operatorAgent.PreviousHop = operatorAgent.OAList[index-1]    // 前跳代理为列表中的前一个
+				operatorAgent.NextHop = operatorAgent.OAList[index+1]        // 后跳代理为列表中的后一个
+			} 
+			break    // 找到本地的OA地址后退出循环
 		}
 
 	}
