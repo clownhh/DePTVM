@@ -49,7 +49,7 @@ func SortMap(mp map[string]string) []string {
 	return finalList    //返回按排序后的键顺序排列的值的切片
 }
 
-将二维字节切片转换为ByteArray切片
+//将二维字节切片转换为ByteArray切片
 func SerializeTwoDimensionArray(arr [][]byte) []ByteArray {
 	byteArr := make([]ByteArray, len(arr))
 	gob.Register(byteArr) //试图使用 gob.Register 注册 byteArr 类型，以便在 gob 编码和解码过程中识别它   //gob.Register(ByteArray{})
