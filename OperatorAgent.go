@@ -1419,6 +1419,7 @@ func trustObfuscation() {
 	var Ntv float64 = 1.0 / float64(d)
 	RN := 1.0 - float64(d)*Ntv
 	operatorAgent.D = d
+	//进行信任值混淆
 	for index := 0; index < size; index++ {
 		for c := 1; c <= d; c++ {
 			if operatorAgent.Listm[index].Val > float64(c-1)*Ntv && operatorAgent.Listm[index].Val <= float64(c)*Ntv {
@@ -1433,6 +1434,7 @@ func trustObfuscation() {
 }
 
 //trust evaluation - time delay
+//用于对操作代理 (operatorAgent) 中的信任值列表 (Listm) 进行基于时间延迟的信任值评估。
 func timeDelayEvaluation() {
 	//trust evaluation
 	fmt.Println("[OA] Start time delay trust evaluation .", operatorAgent.LocalAddress)
@@ -1442,6 +1444,7 @@ func timeDelayEvaluation() {
 
 	//time delay
 	//var t float64 = 0.1
+	//遍历 Listm 并进行信任值更新
 	for index, group := range operatorAgent.Listm {
 		var newTrustValue float64 = 0.0
 		time_factor := math.Exp(-1.0 * math.Abs(float64(K-operatorAgent.U[group.Nym.String()])) / t)
