@@ -1001,7 +1001,7 @@ func ReceiveBlock(Params map[string]interface{}, operatorAgent *OperatorAgent, a
 func PublishBlock(block *blockchain.Block, operatorAgent *OperatorAgent, eventType int) {
 	
 	signBK := util.SchnorrSign(operatorAgent.Suite, random.New(), block.BlockHash(), operatorAgent.PrivateKey)  //使用 Schnorr 签名算法对区块的哈希值进行签名
-	byteBlock := blockchain.ToByteBlock(*block)    /将区块转换为字节数组
+	byteBlock := blockchain.ToByteBlock(*block)    //将区块转换为字节数组
 	//bytePublickey, _ := operatorAgent.PublicKey.MarshalBinary()
 	pm := map[string]interface{}{
 		"Block":  byteBlock,
