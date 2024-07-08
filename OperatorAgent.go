@@ -1239,7 +1239,7 @@ func listPublish() {
 	PublishBlock(operatorAgent.BlockChain.PreviousBlock(), operatorAgent, proto.UNIQUE_LIST_CONFIRMATION)
 }
 
-//接收所有操作代理（Operator Agent, OA）的最新区块，并选择出一个最终的区块作为共识结果
+//接收所有操作代理（Operator Agent, OA）的最新区块（所投票认同的区块），并选择出一个最终的区块作为共识结果
 func listConfirmation() {
 	size := len(operatorAgent.OAList)
 	for len(operatorAgent.CandidateBlocks) != size {
@@ -1274,12 +1274,12 @@ func listConfirmation() {
 
 	//选择具有最高投票数的区块：
 	var Choosen_Block *blockchain.Block = nil
-	var Candidate_Blocks []*blockchain.Block = nil
+	var Candidate_Blocks []*blockchain.Block = nil   //一个区块指针的切片，用于存储所有投票数最高的候选区块
 
 	for k, v := range rank {
-		if v == highest_val {
+		if v == highest_val {     //找到最高的v对应的k
 			for _, val := range operatorAgent.CandidateBlocks {
-				if k == val.Timestamp {
+				if k == val.Timestamp {      //找到k对应的区块，val是此时遍历的区块
 					Candidate_Blocks = append(Candidate_Blocks, val)
 					break
 				}
@@ -1289,7 +1289,7 @@ func listConfirmation() {
 
 	//在多个候选区块中选择最终区块：
 	size2 := len(Candidate_Blocks)
-	Choosen_Block = Candidate_Blocks[0]
+	Choosen_Block = Candidate_Blocks[0]   //将 Candidate_Blocks 列表中的第一个区块赋值给 Choosen_Block
 	if size2 > 1 {
 		for index := 1; index < size2; index++ {
 			Choosen_Block = blockchain.BlockWinnnerSelection(Choosen_Block, Candidate_Blocks[index])
@@ -1310,9 +1310,10 @@ func listConfirmation() {
 
 }
 
+//处理接收到的区块发布确认消息
 func handleListConfirmation(Params map[string]interface{}, operatorAgent *OperatorAgent, addr *net.UDPAddr) {
 
-	ok, block := ReceiveBlock(Params, operatorAgent, addr)
+	ok, block := ReceiveBlock(Params, operatorAgent, addr)    //验证和解析接收到的区块
 	if ok {
 		fmt.Println("[OA] Recieve the pulished block from:", addr)
 		operatorAgent.CandidateBlocks = append(operatorAgent.CandidateBlocks, block)
