@@ -24,3 +24,9 @@ golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b h1:Elez2XeF2p9uyVj0yEUDqQ
 golang.org/x/crypto v0.0.0-20190123085648-057139ce5d2b/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
 golang.org/x/sys v0.0.0-20190124100055-b90733256f2e h1:3GIlrlVLfkoipSReOMNAgApI0ajnalyLa/EZHHca/XI=
 golang.org/x/sys v0.0.0-20190124100055-b90733256f2e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+
+/*用于记录项目所依赖的模块及其精确的版本信息，包括模块的校验和。它是 Go 模块管理系统的一部分，提供了一个确定性的、可复现的依赖关系管理。
+具体来说，go.sum 文件包含以下信息：
+模块版本：项目中使用的每个依赖模块的版本号。
+校验和：每个模块版本的哈希值，确保在将来下载时内容没有被篡改。
+*/
