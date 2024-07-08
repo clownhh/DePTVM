@@ -36,6 +36,7 @@ func SortMap(mp map[string]string) []string {
 
 	var finalList []string = nil
 
+	//遍历排序后的 keys 切片，根据键从 mp 中提取对应的值，并按顺序放入 sortedValues 切片中。
 	for _, s := range newMap {
 		for k, v := range mp {
 			if s == k {
@@ -45,10 +46,10 @@ func SortMap(mp map[string]string) []string {
 		}
 	}
 
-	return finalList
+	return finalList    //返回按排序后的键顺序排列的值的切片
 }
 
-将二位字节切片转换为ByteArray切片
+将二维字节切片转换为ByteArray切片
 func SerializeTwoDimensionArray(arr [][]byte) []ByteArray {
 	byteArr := make([]ByteArray, len(arr))
 	gob.Register(byteArr) //试图使用 gob.Register 注册 byteArr 类型，以便在 gob 编码和解码过程中识别它   //gob.Register(ByteArray{})
