@@ -1458,6 +1458,7 @@ func timeDelayEvaluation() {
 
 /////////////////////////////////
 /////////////normal function
+//逆向洗牌操作
 func reverseShuffle() {
 
 	if len(operatorAgent.Listm) == 0 {
@@ -1465,15 +1466,15 @@ func reverseShuffle() {
 	}
 
 	// add new clients into reputation map
-
+	//遍历 operatorAgent.NewUEsBuffer 中的新客户，将其添加到解密列表中，并设置初始声誉
 	for _, nym := range operatorAgent.NewUEsBuffer {
 		operatorAgent.AddIntoDecryptedList(nym, 0.1)
 	}
-
-	clearBuffer()
+	
+	clearBuffer()    //清空缓冲区
 
 	// add previous clients into reputation map
-	// construct the parameters
+	// construct the parameters    //构建参数列表
 	size := len(operatorAgent.Listm)
 	keys := make([]kyber.Point, size)
 	vals := make([]float64, size)
@@ -1483,6 +1484,7 @@ func reverseShuffle() {
 		vals[index] = operatorAgent.Listm[index].Val
 	}
 
+	//编码和发送参数：
 	byteKeys := util.ProtobufEncodePointList(keys)
 	// send signal to OA
 	params := map[string]interface{}{
@@ -1499,15 +1501,18 @@ func reverseShuffle() {
 func forwardShuffle() {
 
 	//construct TrustValue list (public & encrypted reputation)
+	//构建参数列表
 	size := len(operatorAgent.EnListm)
 	keys := make([]kyber.Point, size)
 	vals := make([][]byte, size)
 
+	//存储
 	for index, _ := range operatorAgent.EnListm {
 		keys[index] = operatorAgent.EnListm[index].Nym
 		vals[index] = operatorAgent.EnListm[index].Val
 	}
 
+	//编码
 	bytekeys := util.ProtobufEncodePointList(keys)
 	bytevals := util.SerializeTwoDimensionArray(vals)
 	params := map[string]interface{}{
@@ -1517,6 +1522,8 @@ func forwardShuffle() {
 	fmt.Println("[OA] The shuffle of forward direction  started...")
 	//event := &proto.Event{proto.FORWARD_SHUFFLE, params}
 	//Handle_OA(event, operatorAgent)
+	
+	//处理
 	handleForwardShuffleOA(params)
 
 }
