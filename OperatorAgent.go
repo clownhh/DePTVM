@@ -1596,6 +1596,7 @@ func updateTopology() {
 	fmt.Println("[OA] OA topology list:", operatorAgent.OAList)
 }
 
+//启动 OperatorAgent 的监听器，接收来自其他操作代理的 UDP 消息，并处理这些消息。
 func startOAListener() {
 	fmt.Println("[OA] OperatorAgent listener started...")
 	buf := make([]byte, 4096)
@@ -1606,9 +1607,10 @@ func startOAListener() {
 	}
 }
 
+//将 OperatorAgent（OA）注册到云服务提供商（CSP）
 func registerOAToCSP() {
 
-	// set the parameters to register
+	// set the parameters to register  设置注册所需的参数
 	bytePublicKey, _ := operatorAgent.PublicKey.MarshalBinary()
 	params := map[string]interface{}{
 		"public_key": bytePublicKey,
@@ -1617,6 +1619,7 @@ func registerOAToCSP() {
 	//register to CSP
 	util.Send(operatorAgent.Socket, operatorAgent.CSPAddress, util.Encode(event))
 }
+
 
 func registerOAToOAs() {
 
@@ -1634,6 +1637,7 @@ func registerOAToOAs() {
 
 }
 
+//初始化 OperatorAgent（OA）的各种参数
 func initOA(LocalAddr *net.UDPAddr, Socket *net.UDPConn, CSPAddr *net.UDPAddr) {
 
 	//initlize suite
@@ -1662,6 +1666,18 @@ func printTrustValue(){
 		fmt.Println("[OA] ================= Node", seq, "==================\n|---Pseudonyms:", trustValue.Nym, "\n|---TrustValue:", trustValue.Val)
 	}
 	fmt.Println("[OA] ============================================")
+	
+	/*输出示例
+	[OA] Nodes' Trust Value as follow:
+	[OA] ============================================
+	[OA] ================= Node 0 ==================
+	|---Pseudonyms: Nym1
+	|---TrustValue: 0.123456
+	[OA] ================= Node 1 ==================
+	|---Pseudonyms: Nym2
+	|---TrustValue: 0.654321
+	[OA] ============================================
+	*/
 }
 
 
