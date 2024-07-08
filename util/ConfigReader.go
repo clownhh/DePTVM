@@ -17,6 +17,7 @@ func ReadConfig() map[string]string {
 	return config
 }
 
+//读取拓扑配置文件，并将其内容解析为一个 map[string]string 类型的字典
 func ReadTopologyConfig() map[string]string {
 	config = make(map[string]string)
 	//readTopologyProperties()
@@ -38,13 +39,13 @@ func readConfig(filepath string) {
 	if err != nil {
 		return
 	}
-	defer file.Close()
+	defer file.Close()   //确保文件在函数返回时被关闭的常见模式，即使函数因错误提前返回。这有助于防止文件句柄泄漏。
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		s := strings.Split(line, "=")
-		config[s[0]] = s[1]
+	scanner := bufio.NewScanner(file)    //用于创建一个新的扫描器（scanner），可以逐行读取文件内容。
+	for scanner.Scan() {                    //逐行读取文件
+		line := scanner.Text()          //用于获取当前行的文本
+		s := strings.Split(line, "=")   //将字符串按等号 = 分割成键值对
+		config[s[0]] = s[1]             //存储分离后的键值对
 	}
 
 	if err := scanner.Err(); err != nil {
