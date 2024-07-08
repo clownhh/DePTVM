@@ -1323,21 +1323,22 @@ func handleListConfirmation(Params map[string]interface{}, operatorAgent *Operat
 }
 
 //trust obfuscation
+//在给定数据集上找到合适的 d 值，以便对信任值进行混淆，使其达到特定的匿名性水平
 func find_d(d int, DataSet []float64) int {
 	//pth := 0.5
 	TrustValueSet := make([]float64, len(DataSet))
-	copy(TrustValueSet, DataSet)
+	copy(TrustValueSet, DataSet)     //将 DataSet 复制到 TrustValueSet 中。
 	fmt.Println("**************************************************")
 	//fmt.Println("d of this round is:", d)
-	var Ntv float64 = 1.0 / float64(d)
+	var Ntv float64 = 1.0 / float64(d)      //计算每个区间的大小。
 	//fmt.Println("Ntv of this round is:", Ntv)
 
-	RN := 1.0 - float64(d)*Ntv
+	RN := 1.0 - float64(d)*Ntv     //计算剩余概率
 	//record the num and p
 	NUM := make([]int, d)
 	P := make([]float64, d)
 
-	//do obfuscation
+	//do obfuscation  // 对数据集进行混淆  //根据 d 将每个值混淆到相应的区间。
 	for index, ele := range TrustValueSet {
 		for c := 1; c <= d; c++ {
 			if ele > float64(c-1)*Ntv && ele <= float64(c)*Ntv {
@@ -1348,7 +1349,7 @@ func find_d(d int, DataSet []float64) int {
 			}
 		}
 	}
-	//count the number of NUM[i]
+	//count the number of NUM[i]     // 统计每个区间的数量
 	for _, ele := range TrustValueSet {
 		for i := 0; i < d; i++ {
 			if ele >= float64(i)*Ntv && ele < float64(i+1)*Ntv {
@@ -1357,7 +1358,7 @@ func find_d(d int, DataSet []float64) int {
 		}
 	}
 
-	//calcuelate p[i]
+	//calcuelate p[i]     计算每个区间的概率
 	for i := 0; i < len(NUM); i++ {
 		if NUM[i] != 0 {
 			P[i] = 1.0 / float64(NUM[i])
@@ -1366,8 +1367,8 @@ func find_d(d int, DataSet []float64) int {
 		}
 	}
 
+	//找到最大的概率值
 	max := P[0]
-
 	for i := 0; i < len(P); i++ {
 		if P[i] > max {
 			max = P[i]
@@ -1377,6 +1378,7 @@ func find_d(d int, DataSet []float64) int {
 	//fmt.Printf("After obfuscation of Ntv [%.6f],the worst anonymous probability is: %.6f\n", Ntv, max)
 
 	if max <= pth {
+		//如果最大的概率值小于等于pth，返回当前的d值
 		//fmt.Println("Choose the d:", d, "to do obfuscation.")
 		return d
 	} else {
