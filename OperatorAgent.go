@@ -68,7 +68,7 @@ type OperatorAgent struct {
 	Npk             int64                  //the number of blocks this OA has created
 	Records         []util.Record          //store the trust value data
 	CandidateBlocks []*blockchain.Block    //stored the lasted blocks from other OAs
-	D               int                    //OA's last obfuscation factor
+	D               int                    //OA's last obfuscation factor         //信任值混淆时的区间间隔
 	U               map[string]int         //the latest block's serial number which alters UE(i)'s trust value
 
 	// connected flag
@@ -1387,15 +1387,19 @@ func find_d(d int, DataSet []float64) int {
 
 }
 
+//对操作代理 (operatorAgent) 中的信任值列表 (Listm) 进行混淆，以增强隐私保护
 func trustObfuscation() {
+	//初始化和准备数据集
 	size := len(operatorAgent.Listm)
 	var DataSet = make([]float64, size)
 
+	//将 Listm 中的信任值拷贝到 DataSet 中
 	var d int = 0
 	for i := 0; i < size; i++ {
 		DataSet[i] = operatorAgent.Listm[i].Val
 	}
 
+	//查找合适的 d 值：如果找到了合适的 d 值，立即跳出循环；如果没有找到，d 将保持为 0。
 	for j := 30; j >= 10; j-- {
 		d := find_d(j, DataSet)
 		if d != 0 {
@@ -1403,6 +1407,7 @@ func trustObfuscation() {
 		}
 	}
 
+	//使用默认值（30）或找到的 d 值
 	if d == 0 {
 		fmt.Println("[OA] Use the default value(30) to do obfuscation.")
 		d = 30
@@ -1410,6 +1415,7 @@ func trustObfuscation() {
 		fmt.Printf("[OA] Use the chossen value(%f) to do obfuscation.\n", d)
 	}
 
+	//计算区间大小和剩余概率
 	var Ntv float64 = 1.0 / float64(d)
 	RN := 1.0 - float64(d)*Ntv
 	operatorAgent.D = d
