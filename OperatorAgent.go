@@ -1681,48 +1681,54 @@ func printTrustValue(){
 }
 
 
+//包含初始化操作、配置读取、循环逻辑和命令处理等，确保OperatorAgent 启动并运行整个周期过程
 func main() {
 	fmt.Println("[OA] OperatorAgent started.")
 
-	//get local ip address
+	//get local ip address      //获取本地IP地址
 	config := util.ReadConfig()
-	// check available port
-	Port, err := strconv.Atoi(config["oa_port"])
+	// check available port      //检查可用端口
+	Port, err := strconv.Atoi(config["oa_port"])       //用于将字符串转换为整数。Atoi 是 "ASCII to integer" 的缩写。
 	util.CheckErr(err)
 	var LocalAddr *net.UDPAddr = nil
 	var Socket *net.UDPConn = nil
 	for i := Port; i <= Port+1000; i++ {
-		addr, _ := net.ResolveUDPAddr("udp", config["oa_ip"]+":"+strconv.Itoa(i))
+		addr, _ := net.ResolveUDPAddr("udp", config["oa_ip"]+":"+strconv.Itoa(i))  //解析一个UDP地址。具体来说，它将一个IP地址和端口号的字符串转换为一个 *net.UDPAddr 类型的对象
 		conn, err := net.ListenUDP("udp", addr)
-		if err == nil {
+		if err == nil {    //udp连接未报错
 			LocalAddr = addr
 			Socket = conn
 			break
 		}
 	}
 	fmt.Println("[OA] Local address is:", LocalAddr)
-	//get csp's ip address
+	
+	//get csp's ip address    // 获取CSP的IP地址
 	CSPAddr, err := net.ResolveUDPAddr("udp", config["csp_ip"]+":"+config["csp_port"])
 	util.CheckErr(err)
 	fmt.Println("[OA] CSP's IP address :", CSPAddr)
+
+	// 初始化OA
 	initOA(LocalAddr, Socket, CSPAddr)
 	updateTopology()
 	go startOAListener()
 	registerOAToCSP()
-	//wait for AP and UE register
+	
+	//wait for AP and UE register     // 等待AP和UE注册
 	time.Sleep(10.0 * time.Second)
 
-	// read command and process
+	// read command and process      // 读取命令并处理
 	fmt.Println("[OA] Enter your command.(Type 'ok' to start cycle)")
 	reader := bufio.NewReader(os.Stdin)
 Loop:
 	for {
+		//读取并分割命令
 		data, _, _ := reader.ReadLine()
 		command := string(data)
 		commands := strings.Split(command, " ")
 		switch commands[0] {
 		case "ok":
-			registerOAToOAs()
+			registerOAToOAs()   
 			break Loop
 		default:
 			fmt.Println("[OA] Hello!")
@@ -1732,31 +1738,39 @@ Loop:
 	//the cycle of listMaintence
 	for k := 0; k < ListMaintenceNumber; k++ {
 		if operatorAgent.IsLastOA == true {
-			reverseShuffle()
+			reverseShuffle()   //最后一个OA开启后向混洗
 		}
+		
 		for operatorAgent.Status != READY_FOR_NEW_ROUND {
-			//wait for nym update done
+			//wait for nym update done   // 检测状态，等待假名更新完成
 			time.Sleep(1.0 * time.Millisecond)
 		}
 		//the cycle of consensus
 		for i := 0; i < ConsensusNumber; i++ {
 			time.Sleep(1.0 * time.Second)
+			
 			dataCollectionOA()
 
 			for operatorAgent.Status != READY_FOR_CONSENSUS {
-				//wait for data collection && evaluation done
+				//wait for data collection && evaluation done     //  检测状态，等待数据收集和评估完成
 				time.Sleep(1.0 * time.Millisecond)
 			}
 
-			//consensus
+			//consensus  //共识
 			operatorAgent.MineStatus = READY
+			
 			go CountDownListening()
+			
 			startMine()
+			
 			for operatorAgent.MineStatus != FINISH {
 				//wait for OA's status turn to FINISH
 			}
+			
 			time.Sleep(1.0 * time.Millisecond)
+			
 			consensusEnd()
+			
 		}
 		time.Sleep(1.0 * time.Millisecond)
 		//list maintenance
