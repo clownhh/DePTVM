@@ -1230,26 +1230,30 @@ func computeDistance(a, b []float64) float64 {
 /////////list maintenance
 
 //unique list confirmation
-
+//将最新的区块发布给其他OA
 func listPublish() {
-	//construct candidate blocks
+	//construct candidate blocks    //将最新区块添加到候选区块列表中
 	operatorAgent.CandidateBlocks = append(operatorAgent.CandidateBlocks, operatorAgent.BlockChain.PreviousBlock())
 	fmt.Println("[OA] Publish the latest block to other OperatorAgents!")
+	//将最新区块发布给其他操作代理
 	PublishBlock(operatorAgent.BlockChain.PreviousBlock(), operatorAgent, proto.UNIQUE_LIST_CONFIRMATION)
 }
 
+//接收所有操作代理（Operator Agent, OA）的最新区块，并选择出一个最终的区块作为共识结果
 func listConfirmation() {
 	size := len(operatorAgent.OAList)
 	for len(operatorAgent.CandidateBlocks) != size {
-		//wait for recieve all OA's latest block
+		//wait for recieve all OA's latest block   //获取 OA 列表的长度，并等待 operatorAgent.CandidateBlocks 列表的长度等于 OA 列表的长度。
 	}
 	fmt.Println("[OA] Recieve all OA's new block!")
 
+	//初始化计数器：初始化一个 rank 字典来记录每个时间戳的区块出现的次数。
 	var rank map[int64]int = make(map[int64]int, size)
 	for _, block := range operatorAgent.CandidateBlocks {
 		rank[block.Timestamp] = 0
 	}
 
+	//统计每个时间戳出现的区块次数：
 	for i := 0; i < size; i++ {
 		for k, _ := range rank {
 			if k == operatorAgent.CandidateBlocks[i].Timestamp {
@@ -1259,7 +1263,7 @@ func listConfirmation() {
 		}
 	}
 
-	//find the highest val
+	//find the highest val   //找到最高投票数
 	var highest_val int = 0
 	for _, v := range rank {
 
@@ -1268,6 +1272,7 @@ func listConfirmation() {
 		}
 	}
 
+	//选择具有最高投票数的区块：
 	var Choosen_Block *blockchain.Block = nil
 	var Candidate_Blocks []*blockchain.Block = nil
 
@@ -1282,6 +1287,7 @@ func listConfirmation() {
 		}
 	}
 
+	//在多个候选区块中选择最终区块：
 	size2 := len(Candidate_Blocks)
 	Choosen_Block = Candidate_Blocks[0]
 	if size2 > 1 {
@@ -1290,7 +1296,7 @@ func listConfirmation() {
 		}
 	}
 
-	//accept the winner block's listm
+	//accept the winner block's listm   //接收赢家区块的 listm
 	nymList := util.ProtobufDecodePointList(Choosen_Block.Nyms)
 	size3 := len(nymList)
 	operatorAgent.Listm = make([]util.Pair, size3)
@@ -1299,6 +1305,7 @@ func listConfirmation() {
 		operatorAgent.Listm[i].Val = Choosen_Block.Vals[i]
 	}
 
+	//重置候选区块列表
 	operatorAgent.CandidateBlocks = nil
 
 }
