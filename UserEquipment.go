@@ -233,7 +233,7 @@ func main() {
 	// read command and process
 	fmt.Println("[UE] Enter your command.")
 
-Loop:  //标记一个无线循环
+Loop:  //标记一个无线循环  //等待推出指令
 	for {
 		fmt.Print("cmd >> ")
 		data, _, _ := reader.ReadLine()
