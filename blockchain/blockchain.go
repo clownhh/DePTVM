@@ -160,24 +160,24 @@ func (b *Block) PrintBlock() {
 func BlockWinnnerSelection(block0, block1 *Block) *Block {
 
 	if block0.Timestamp != block1.Timestamp {
-		if block0.Timestamp < block1.Timestamp {
+		if block0.Timestamp < block1.Timestamp {   //选择时间戳较小的
 			return block0
 		} else {
 			return block1
 		}
-	} else if block0.Npk != block1.Npk {
+	} else if block0.Npk != block1.Npk {     //创建者生成了多少区块，选择生成区块较少的创建者生成的区块
 		if block0.Npk < block1.Npk {
 			return block0
 		} else {
 			return block1
 		}
-	} else if block0.Nd != block1.Nd {
+	} else if block0.Nd != block1.Nd {    //选择块中的数据数较多的
 		if block0.Nd > block1.Nd {
 			return block0
 		} else {
 			return block1
 		}
-	} else if bytes.Compare(block0.BlockHash(), block1.BlockHash()) < 0 {
+	} else if bytes.Compare(block0.BlockHash(), block1.BlockHash()) < 0 {    //选择块的哈希较小
 		return block0
 	} else {
 		return block1
