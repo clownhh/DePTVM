@@ -13,8 +13,10 @@ IEEE Transactions on Dependable and Secure Computing 2023
    // 如果下载失败，连接不到源：
        # 设置代理并关闭校验（推荐）
       go env -w GOPROXY=https://goproxy.cn,direct
+   
       go env -w GOSUMDB=off
-2. For each entity(UE/OA/AP/CSP):
+   
+3. For each entity(UE/OA/AP/CSP):
   go run _.go
 
 > initial order: CSP>OA>AP>UE
