@@ -399,7 +399,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 
 			operatorAgent.EnListm = nil
 			for i := 0; i < len(newKeys); i++ {
-
+				//保存
 				operatorAgent.AddIntoEecryptedList(newKeys[i], newVals[i])
 			}
 			fmt.Println("[OA] The shuffle of forward direction will start.")
@@ -418,7 +418,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 
 	rand := random.New()
 
-	// *** perform neff shuffle here ***
+	// *** perform neff shuffle here ***   正式洗牌
 
 	Xbar, Ybar, Ytmp, prover := neffShuffle(Xori, newKeys, rand)
 
