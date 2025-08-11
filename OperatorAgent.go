@@ -554,6 +554,8 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 	Xori := make([]kyber.Point, len(newVals))
 	for i := 0; i < size; i++ {
 		Xori[i] = operatorAgent.Suite.Point().Mul(operatorAgent.PrivateKey, nil)
+		//Mul(scalar, point) 是 椭圆曲线上的标量乘法；如果 point == nil，kyber 的约定是使用群的生成元 G（也就是基点）。
+		//这行等价于私钥*基点=公钥。
 	}
 	
 	//turn it to byte
