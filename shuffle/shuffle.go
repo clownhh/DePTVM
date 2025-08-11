@@ -103,16 +103,19 @@ type PairShuffle struct {
 // Init creates a new PairShuffleProof instance for a k-element ElGamal pair shuffle.
 // This protocol follows the ElGamal Pair Shuffle defined in section 4 of
 // Andrew Neff, "Verifiable Mixing (Shuffling) of ElGamal Pairs", 2004.          //定义点列表的正确长度
-func (ps *PairShuffle) Init(grp kyber.Group, k int) *PairShuffle {
+func (ps *PairShuffle) Init(grp kyber.Group, k int) *PairShuffle {  
 	//kyber.Group 是 go.dedis.ch/kyber/v4 包中的一个接口，代表一个数学群（Group）。数学群在密码学中有广泛的应用，尤其是在公钥密码系统、数字签名和零知识证明中。
-	//k是排列的个数
+	//k是排列的行数
 	if k <= 1 {
 		panic("can't shuffle permutation of size <= 1")
 	}
 
 	// Create a well-formed PairShuffleProof with arrays correctly sized.
+	
+	//把群环境与规模写入结构体，供后续生成/验证使用。
 	ps.grp = grp
 	ps.k = k
+	
 	ps.p1.A = make([]kyber.Point, k)
 	ps.p1.C = make([]kyber.Point, k)
 	ps.p1.U = make([]kyber.Point, k)
@@ -327,22 +330,24 @@ func (ps *PairShuffle) Verify(
 // If g or h is nil, the standard base point is used.
 func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 	rand cipher.Stream) (XX, YY, Ybaby []kyber.Point, P proof.Prover) {
-	/*Shuffle 函数接收一个密码学群 group、两个点 g 和 h（用于ElGamal加密），以及两个切片 X 和 Y 分别存储了ElGamal加密对的明文和密文部分。rand 是用于生成随机数的密码流。
-	返回值包括 XX、YY 和 Ybaby，它们分别是重排后的明文 Xbar、重排后的密文 Ybar，以及一个用于生成正确性证明的 proof.Prover 函数。
+	/*Shuffle 函数接收一个密码学群 group、两个点 g 和 h（用于ElGamal加密），以及两个切片 X 和 Y 分别存储了ElGamal加密对的明文和密文（两列）部分。rand 是用于生成随机数的密码流。
+	返回值包括 XX、YY 和 Ybaby，它们分别是重排后的明文（第一列） Xbar、重排后的密文（第二列） Ybar，以及一个用于生成正确性证明的 proof.Prover 函数。
 	*/
-	k := len(X)
+	k := len(X)    //把长度赋值给变量 k
 	if k != len(Y) {
 		panic("X,Y vectors have inconsistent length")
 	}
 
+	//初始化一个结构体实例
 	ps := PairShuffle{}
 	ps.Init(group, k)
 
 	// Pick a random permutation（排列）
 	pi := make([]int, k)
-	for i := 0; i < k; i++ { // Initialize a trivial permutation (自然顺序)
+	for i := 0; i < k; i++ { // Initialize a trivial permutation (自然数顺序)
 		pi[i] = i
 	}
+	//采用Fisher–Yates shuffle
 	for i := k - 1; i > 0; i-- { // Shuffle by random swaps
 		j := int(randUint64(rand) % uint64(i+1))
 		if j != i {
@@ -375,6 +380,7 @@ func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 	同时，将 Ybar[i] 的临时值存储在 Ytmp[i] 中，这些临时值将在后面的证明中使用。
 	*/
 
+	//这里不直接生成证明材料，外部框架调用它时，再把 pi, g, h, beta, X, Y 这些秘密/中间量带入，按协议和挑战生成零知识
 	prover := func(ctx proof.ProverContext) error {
 		return ps.Prove(pi, g, h, beta, X, Y, rand, ctx)
 	}
