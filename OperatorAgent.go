@@ -374,6 +374,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		newVals[i] = C
 	}
 
+	//序列化
 	byteNewKeys := util.ProtobufEncodePointList(newKeys)
 	// type is []ByteArr
 	byteNewVals := util.SerializeTwoDimensionArray(newVals)
@@ -386,7 +387,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		}
 		event := &proto.Event{proto.REVERSE_SHUFFLE, pm}
 
-		// reset RoundKey and key map
+		// reset RoundKey and key map   //每轮洗牌/重加密后，清理状态避免关联性泄露与复用风险。
 		//将被赋值为生成的随机标量
 		operatorAgent.Roundkey = operatorAgent.Suite.Scalar().Pick(random.New())
 		operatorAgent.KeyMap = make(map[string]kyber.Point)
@@ -409,7 +410,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 
 	}
 
-	Xori := make([]kyber.Point, len(newVals)) //store the ori publickey of sever
+	Xori := make([]kyber.Point, len(newVals)) //store the ori publickey of sever  //// 存“原始（等价）公钥”的镜像
 	for i := 0; i < size; i++ {
 		Xori[i] = operatorAgent.Suite.Point().Mul(operatorAgent.PrivateKey, nil) //same as publickey
 	}
@@ -420,8 +421,10 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 
 	// *** perform neff shuffle here ***   正式洗牌
 
+	//prover：零知识证明
 	Xbar, Ybar, Ytmp, prover := neffShuffle(Xori, newKeys, rand)
 
+	//生成可验证的哈希式 ZK 证明，证明“我对两列做了同一置换 + 正确的重加密”，但不泄露置换本身。
 	prf, err := proof.HashProve(operatorAgent.Suite, "PairShuffle", prover)
 	util.CheckErr(err)
 
@@ -429,6 +432,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	finalKeys := convertToOrigin(Ybar, Ytmp)
 	finalVals := rebindReputation(newKeys, newVals, finalKeys)
 
+	//打包要回传给上一跳的数据
 	// send data to the next server
 	byteXbar := util.ProtobufEncodePointList(Xbar)
 	byteYbar := util.ProtobufEncodePointList(Ybar)
@@ -450,30 +454,32 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	}
 	event := &proto.Event{proto.REVERSE_SHUFFLE, pm}
 	
-	// reset RoundKey and key map
+	// reset RoundKey and key map  重置状态并回传；
 	operatorAgent.Roundkey = operatorAgent.Suite.Scalar().Pick(random.New())
 	operatorAgent.KeyMap = make(map[string]kyber.Point)
 
+	//继续进行后向洗牌
 	if operatorAgent.PreviousHop != nil {
 		fmt.Println("[OA] The shuffle of reverse direction is going on.Pass the list to the previous OperatorAgent.")
 		util.Send(operatorAgent.Socket, operatorAgent.PreviousHop, util.Encode(event))
 		//Handle_OA(event, operatorAgent.PreviousHop)
 
-	} else {
+	} else {     //后向洗牌完成，
 		fmt.Println("[OA] The shuffle of reverse direction is done.")
 		//when finishing reverse shuffle,the first OA should store the encrypted listm.
-		operatorAgent.EnListm = nil
+		operatorAgent.EnListm = nil     //加密列表
 		for i := 0; i < len(finalKeys); i++ {
 
 			operatorAgent.AddIntoEecryptedList(finalKeys[i], finalVals[i])  //当完成反向洗牌时，第一个OA应该存储加密的列表。
 		}
 
-		forwardShuffle()        // ？
+		forwardShuffle()        // 开始进行前向洗牌
 		return
 	}
 
 }
 
+//进行前向洗牌
 func handleForwardShuffleOA(params map[string]interface{}) {
 
 	g := operatorAgent.Suite.Point()
