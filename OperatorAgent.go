@@ -387,6 +387,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		event := &proto.Event{proto.REVERSE_SHUFFLE, pm}
 
 		// reset RoundKey and key map
+		//将被赋值为生成的随机标量
 		operatorAgent.Roundkey = operatorAgent.Suite.Scalar().Pick(random.New())
 		operatorAgent.KeyMap = make(map[string]kyber.Point)
 		if operatorAgent.PreviousHop != nil {
