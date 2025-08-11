@@ -601,7 +601,7 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 		fmt.Println("[OA] The shuffle of forward direction is done.")
 		//when finishing forward shuffle,the first OA should store the new listm.
 		operatorAgent.Listm = nil
-		operatorAgent.U = make(map[string]int)
+		operatorAgent.U = make(map[string]int)   //更改UE(i)信任值的最新块序列号
 		for i := 0; i < len(finalKeys); i++ {
 			operatorAgent.AddIntoDecryptedList(finalKeys[i], util.ByteToFloat64(finalVals[i]))
 			operatorAgent.U[finalKeys[i].String()] = 0
