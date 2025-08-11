@@ -329,13 +329,25 @@ func neffShuffle(X []kyber.Point, Y []kyber.Point, rand cipher.Stream) (Xbar, Yb
 	return       //函数直接返回 Shuffle 函数的结果
 }
 
+//处理后向混洗
 func handleReverseShuffleOA(params map[string]interface{}) {
+	//	params := map[string]interface{}{
+	//	"keys":     byteKeys,
+	//	"vals":     vals,
+	//	"is_start": true,
+	//}
 
+	//解码
 	keyList := util.ProtobufDecodePointList(params["keys"].([]byte))
 	size := len(keyList)
+	//创建一个二维字节切片（slice），其中第一维的长度为 size，第二维是动态的 []byte 类型。
 	byteValList := make([][]byte, size)
 	//if reverse_shffle just start(last OA),no need to verify previous shuffle  //如果reverse_shffle刚刚开始(最后一次OA)，则不需要验证之前的洗牌
+	//检查名为 params 的 map 中是否存在键 "is_start"
+	//如果存在（ok == true），则执行后续代码
 	if _, ok := params["is_start"]; ok {
+		//从 params map 中取出键 "vals" 的值
+        //使用类型断言 .([]float64) 将其转换为 float64 类型的切片
 		intValList := params["vals"].([]float64)
 		for i := 0; i < len(intValList); i++ {
 			byteValList[i] = util.Float64ToByte(intValList[i])
