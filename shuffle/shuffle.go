@@ -357,7 +357,7 @@ func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 		}
 	}
 
-	// Pick a fresh ElGamal blinding factor for each pair
+	// Pick a fresh ElGamal blinding factor for each pair  //为每一个键值对选择一个盲化因子（e_i）
 	beta := make([]kyber.Scalar, k)
 	for i := 0; i < k; i++ {
 		beta[i] = ps.grp.Scalar().Pick(rand)
@@ -367,15 +367,15 @@ func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 	Xbar := make([]kyber.Point, k)
 	Ybar := make([]kyber.Point, k)
 	Ytmp := make([]kyber.Point, k)
-	for i := 0; i < k; i++ {           //Xbar跟Ybar都是独立运算的，Ytmp应该就是g^ei
+	for i := 0; i < k; i++ {           //Xbar跟Ybar都是独立运算的，Ytmp应该就是g^ei  //！！！相当于在原来的基础上，在指数上乘以e_i
 		Xbar[i] = ps.grp.Point().Mul(beta[pi[i]], g)    //Mul就是指数运算   //ps.grp.Point()生成一个空点对象，用Mul的计算结果赋值
 		Xbar[i].Add(Xbar[i], X[pi[i]])                  //Add就是乘积运算
-		Ytmp[i] = ps.grp.Point().Mul(beta[pi[i]], h)
+		Ytmp[i] = ps.grp.Point().Mul(beta[pi[i]], h)    
 		Ybar[i] = ps.grp.Point().Mul(beta[pi[i]], h)
-		Ybar[i].Add(Ybar[i], Y[pi[i]])
+		Ybar[i].Add(Ybar[i], Y[pi[i]])                  //这里算的是此时的用户假名
 	}
 	/*创建一个长度为 k 的 beta 数组，每个元素是一个随机的密码学标量。然后对每个加密对 (X[i], Y[i]) 进行ElGamal再随机化：
-	计算 Xbar[i] = beta[pi[i]] * g + X[pi[i]]      (g^(x*ei)
+	计算 Xbar[i] = beta[pi[i]] * g + X[pi[i]]      (g^(x*ei))   
 	计算 Ybar[i] = beta[pi[i]] * h + Y[pi[i]]
 	同时，将 Ybar[i] 的临时值存储在 Ytmp[i] 中，这些临时值将在后面的证明中使用。
 	*/
