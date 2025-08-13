@@ -414,7 +414,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 
 	Xori := make([]kyber.Point, len(newVals)) //store the ori publickey of sever  //// 存“原始（等价）公钥”的镜像
 	for i := 0; i < size; i++ {
-		Xori[i] = operatorAgent.Suite.Point().Mul(operatorAgent.PrivateKey, nil) //same as publickey    (OA的公钥)
+		Xori[i] = operatorAgent.Suite.Point().Mul(operatorAgent.PrivateKey, nil) //same as publickey    (OA的公钥：这里的每一个元素都等于当前 OA 节点自己的公钥)
 	}
 
 	byteOri := util.ProtobufEncodePointList(Xori)
@@ -443,13 +443,13 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	bytePublicKey, _ := operatorAgent.PublicKey.MarshalBinary()
 	
 	// prev keys means the key before shuffle
-	pm := map[string]interface{}{
+	pm := map[string]interface{}{     //pm是一个临时变量
 		"xbar":       byteXbar,
 		"ybar":       byteYbar,
 		"keys":       byteFinalKeys,
 		"vals":       byteFinalVals,
 		"proof":      prf,
-		"prev_keys":  byteOri,              //洗牌前的键
+		"prev_keys":  byteOri,              //（洗牌前的键）
 		"prev_vals":  byteNewKeys,
 		"shuffled":   true,
 		"public_key": bytePublicKey,
@@ -583,7 +583,7 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 	bytePublicKey, _ := operatorAgent.PublicKey.MarshalBinary()
 	
 	// prev keys means the key before shuffle
-	pm := map[string]interface{}{
+	pm := map[string]interface{}{     //pm是一个临时变量
 		"xbar":       byteXbar,
 		"ybar":       byteYbar,
 		"keys":       byteFinalKeys,
