@@ -367,15 +367,15 @@ func Shuffle(group kyber.Group, g, h kyber.Point, X, Y []kyber.Point,
 	Xbar := make([]kyber.Point, k)
 	Ybar := make([]kyber.Point, k)
 	Ytmp := make([]kyber.Point, k)
-	for i := 0; i < k; i++ {
-		Xbar[i] = ps.grp.Point().Mul(beta[pi[i]], g)
-		Xbar[i].Add(Xbar[i], X[pi[i]])
+	for i := 0; i < k; i++ {           //Xbar跟Ybar都是独立运算的，Ytmp应该就是g^ei
+		Xbar[i] = ps.grp.Point().Mul(beta[pi[i]], g)    //Mul就是指数运算   //ps.grp.Point()生成一个空点对象，用Mul的计算结果赋值
+		Xbar[i].Add(Xbar[i], X[pi[i]])                  //Add就是乘积运算
 		Ytmp[i] = ps.grp.Point().Mul(beta[pi[i]], h)
 		Ybar[i] = ps.grp.Point().Mul(beta[pi[i]], h)
 		Ybar[i].Add(Ybar[i], Y[pi[i]])
 	}
 	/*创建一个长度为 k 的 beta 数组，每个元素是一个随机的密码学标量。然后对每个加密对 (X[i], Y[i]) 进行ElGamal再随机化：
-	计算 Xbar[i] = beta[pi[i]] * g + X[pi[i]]
+	计算 Xbar[i] = beta[pi[i]] * g + X[pi[i]]      (g^(x*ei)
 	计算 Ybar[i] = beta[pi[i]] * h + Y[pi[i]]
 	同时，将 Ybar[i] 的临时值存储在 Ytmp[i] 中，这些临时值将在后面的证明中使用。
 	*/
