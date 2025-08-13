@@ -77,13 +77,14 @@ type OperatorAgent struct {
 	NextHop *net.UDPAddr
 	// previous hop in topology
 	PreviousHop *net.UDPAddr
-	// map current public key with previous key(UE)
+	// map current public key with previous key(UE)   //将当前公钥映射到以前的密钥（UE）
 	KeyMap map[string]kyber.Point
 
-	// used for modPow encryption
-	Roundkey kyber.Scalar
+	// used for modPow encryption   （modPow的意思是模幂运算，在椭圆曲线中就是标量乘法）
+	Roundkey kyber.Scalar       //在initOA函数中随机选取的
 }
 
+//添加
 func (o *OperatorAgent) AddAP(addr *net.UDPAddr, key kyber.Point) {
 	o.APList = append(o.APList, addr)
 	o.APKeyList[addr.String()] = key
@@ -245,8 +246,8 @@ func handleUERegisterOASide_OA(params map[string]interface{}) {
 	//将一个表示 IP 地址和端口的字符串解析为 *net.UDPAddr 类型的地址对象。
 	util.CheckErr(err)
 	fmt.Println("[OA] Receive  register request from UserEquipment: ", UEAddr)
-	operatorAgent.KeyMap[newKey.String()] = publicKey
-	//表示将一个 publicKey 存储在 operatorAgent.KeyMap 中，键为 newKey 转换为字符串的结果。
+	operatorAgent.[newKey.String()] = publicKey
+	//表示将一个 publicKey 存储在 operatorAgent. 中，键为 newKey 转换为字符串的结果。
 
 	pm := map[string]interface{}{
 		"public_key": byteNewKey,
@@ -344,7 +345,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	byteValList := make([][]byte, size)
 	//if reverse_shffle just start(last OA),no need to verify previous shuffle  //如果reverse_shffle刚刚开始(最后一次OA)，则不需要验证之前的洗牌
 	//检查名为 params 的 map 中是否存在键 "is_start"
-	//如果存在（ok == true），则执行后续代码
+	//如果存在（ok == true），则执行后续代码 （对值的序列化）
 	if _, ok := params["is_start"]; ok {
 		//从 params map 中取出键 "vals" 的值
         //使用类型断言 .([]float64) 将其转换为 float64 类型的切片
@@ -368,8 +369,8 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	newVals := make([][]byte, size)
 	for i := 0; i < size; i++ {
 		// decrypt the public key
-		newKeys[i] = operatorAgent.KeyMap[keyList[i].String()]
-		// encrypt the reputation using ElGamal algorithm         //匿名加密
+		newKeys[i] = operatorAgent.[keyList[i].String()]
+		// encrypt the reputation using ElGamal algorithm         //匿名加密  //加密声誉值
 		C := anon.Encrypt(operatorAgent.Suite, byteValList[i], anon.Set(X))  //anon.Set(X)设置公钥
 		newVals[i] = C
 	}
@@ -391,6 +392,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		//将被赋值为生成的随机标量
 		operatorAgent.Roundkey = operatorAgent.Suite.Scalar().Pick(random.New())
 		operatorAgent.KeyMap = make(map[string]kyber.Point)
+		
 		if operatorAgent.PreviousHop != nil {
 			fmt.Println("[OA] The shuffle of opposite direction is going on.(size <= 1)")
 			util.Send(operatorAgent.Socket, operatorAgent.PreviousHop, util.Encode(event))
@@ -412,7 +414,7 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 
 	Xori := make([]kyber.Point, len(newVals)) //store the ori publickey of sever  //// 存“原始（等价）公钥”的镜像
 	for i := 0; i < size; i++ {
-		Xori[i] = operatorAgent.Suite.Point().Mul(operatorAgent.PrivateKey, nil) //same as publickey
+		Xori[i] = operatorAgent.Suite.Point().Mul(operatorAgent.PrivateKey, nil) //same as publickey    (OA的公钥)
 	}
 
 	byteOri := util.ProtobufEncodePointList(Xori)
@@ -515,8 +517,8 @@ func handleForwardShuffleOA(params map[string]interface{}) {
 		MM, err := anon.Decrypt(operatorAgent.Suite, valList[i].Arr, anon.Set(X1), 0, operatorAgent.PrivateKey)
 		util.CheckErr(err)
 		newVals[i] = MM
-		// update key map (nym->publickey)
-		operatorAgent.KeyMap[newKeys[i].String()] = keyList[i]
+		// update key map (nym->publickey)   //假名和公钥的链接
+		operatorAgent.KeyMap[newKeys[i].String()] = keyList[i]       //维护一个映射表，把新生成的化名公钥（newKeys[i]）和原来的化名公钥（keyList[i]）对应起来
 	}
 	//turn the nym//val and gm to byte    //将数据编码为字节数组:
 	byteNewKeys := util.ProtobufEncodePointList(newKeys)
