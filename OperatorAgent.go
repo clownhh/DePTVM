@@ -345,15 +345,15 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 	byteValList := make([][]byte, size)
 	//if reverse_shffle just start(last OA),no need to verify previous shuffle  //如果reverse_shffle刚刚开始(最后一次OA)，则不需要验证之前的洗牌
 	//检查名为 params 的 map 中是否存在键 "is_start"
-	//如果存在（ok == true），则执行后续代码 （对值的序列化）
-	if _, ok := params["is_start"]; ok {
+	//如果存在（ok == true），则执行后续代码 （对值的序列化） // 数据验证与反序列化
+	if _, ok := params["is_start"]; ok {  //起始节点：直接处理原始浮点数值
 		//从 params map 中取出键 "vals" 的值
         //使用类型断言 .([]float64) 将其转换为 float64 类型的切片
 		intValList := params["vals"].([]float64)
 		for i := 0; i < len(intValList); i++ {
 			byteValList[i] = util.Float64ToByte(intValList[i])
 		}
-	} else {
+	} else {  //中间节点：先验证前驱节点的Neff混洗证明，再反序列化数据
 		// verify neff shuffle if needed
 		verifyNeffShuffle(params)
 		// deserialize data part     //反序列化数据部分
@@ -363,24 +363,26 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		}
 	}
 
+	// 密钥重加密与数据加密
 	X := make([]kyber.Point, 1)
 	X[0] = operatorAgent.PublicKey
 	newKeys := make([]kyber.Point, size)
 	newVals := make([][]byte, size)
 	for i := 0; i < size; i++ {
-		// decrypt the public key
+		// decrypt the public key    //    // 解密公钥
 		newKeys[i] = operatorAgent.[keyList[i].String()]
-		// encrypt the reputation using ElGamal algorithm         //匿名加密  //加密声誉值
+		// encrypt the reputation using ElGamal algorithm         //匿名加密  //加密声誉值  //    // ElGamal加密声誉值
 		C := anon.Encrypt(operatorAgent.Suite, byteValList[i], anon.Set(X))  //anon.Set(X)设置公钥
 		newVals[i] = C
 	}
+	//密钥重加密：使用本地密钥映射解密接收到的公钥；数据加密：使用ElGamal算法重新加密声誉数据；匿名性保证：确保数据与密钥的关联关系被打破
 
 	//序列化
 	byteNewKeys := util.ProtobufEncodePointList(newKeys)
 	// type is []ByteArr
 	byteNewVals := util.SerializeTwoDimensionArray(newVals)
 
-	if size <= 1 {
+	if size <= 1 {    //边界情况处理（size ≤ 1）
 		// no need to shuffle, just send the package to previous server   //无需洗牌，只需将包发送到上一个服务器即可
 		pm := map[string]interface{}{
 			"keys": byteNewKeys,
@@ -388,16 +390,16 @@ func handleReverseShuffleOA(params map[string]interface{}) {
 		}
 		event := &proto.Event{proto.REVERSE_SHUFFLE, pm}
 
-		// reset RoundKey and key map   //每轮洗牌/重加密后，清理状态避免关联性泄露与复用风险。
+		// reset RoundKey and key map   //每轮洗牌/重加密后，清理状态避免关联性泄露与复用风险。//    // 重置状态
 		//将被赋值为生成的随机标量
 		operatorAgent.Roundkey = operatorAgent.Suite.Scalar().Pick(random.New())
 		operatorAgent.KeyMap = make(map[string]kyber.Point)
 		
-		if operatorAgent.PreviousHop != nil {
+		if operatorAgent.PreviousHop != nil {     //        // 继续向后传递
 			fmt.Println("[OA] The shuffle of opposite direction is going on.(size <= 1)")
 			util.Send(operatorAgent.Socket, operatorAgent.PreviousHop, util.Encode(event))
 			//Handle_OA(event, operatorAgent.PreviousHop)
-		} else {
+		} else {            // 后向混洗完成，存储结果
 			fmt.Println("[OA] The shuffle of opposite direction is done.(size <= 1)")
 
 			operatorAgent.EnListm = nil
