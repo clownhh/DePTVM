@@ -17,6 +17,8 @@
 // The general PairShuffle builds on this SimpleShuffle scheme,
 // but SimpleShuffle may also be used by itself in situations
 // that satisfy its assumptions, and is more efficient.
+//这个文件实现了 Andrew Neff 的可验证洗牌（verifiable shuffle）证明，针对的是 ElGamal 对（pair） 的洗牌与零知识证明。
+//核心目标是：对一组 ElGamal 密文对做随机置换并重新随机化，同时生成一个非交互式零知识证明，证明新序列确实是原序列经过某个置换与重随机化得到的，而不揭示置换或随机因子。
 package shuffle
 
 import (
