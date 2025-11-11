@@ -20,35 +20,45 @@
 //这个文件实现了 Andrew Neff 的可验证洗牌（verifiable shuffle）证明，针对的是 ElGamal 对（pair） 的洗牌与零知识证明。
 //核心目标是：对一组 ElGamal 密文对做随机置换并重新随机化，同时生成一个非交互式零知识证明，证明新序列确实是原序列经过某个置换与重随机化得到的，而不揭示置换或随机因子。
 package shuffle
+//这个 .go 文件 属于名字为 shuffle 的包（module 内的包）。在同一包里的其它文件可以互相访问包内未导出的标识符（小写名），外部包只能访问导出的标识符（以大写字母开头的类型、函数、变量等）。
 
-import (
-	"crypto/cipher"
-	"encoding/binary"
-	"errors"
+import (    //这里用了一个“分组导入”语法，把多个包一次性列出。
+	"crypto/cipher"    //Go 标准库里的包，提供对称加密相关接口和类型。这里最重要的是 cipher.Stream 接口（流密码抽象），在本文件其他地方用来传入“伪随机流
+	"encoding/binary"  //提供二进制数据的编码/解码工具，常用于把 []byte 转成整数或反之。
+	"errors"           //Go 的标准错误构造包，常用 errors.New("...") 来创建一个 error 对象（Go 的错误类型）
 
-	"go.dedis.ch/kyber/v4"
-	"go.dedis.ch/kyber/v4/proof"                 //零知识证明的库
-	sh "go.dedis.ch/kyber/v4/shuffle"
-	"go.dedis.ch/kyber/v4/util/random"
+	//整个文件的核心依赖——kyber 是 DEDIS 团队（瑞士洛桑）开发的一个通用加密抽象库（Go 语言），提供群（group）、点（point）、标量（scalar）、零知识证明抽象等。
+	//你会看到 kyber.Point、kyber.Scalar、kyber.Group 等类型被大量使用。kyber 抽象了底层的椭圆曲线或群运算，使得上层算法与具体曲线实现解耦（可以换不同 Suite）
+	"go.dedis.ch/kyber/v4"   
+	"go.dedis.ch/kyber/v4/proof"                 //零知识证明的库  //这是 kyber 的“证明”抽象包。提供 ProverContext、VerifierContext、Prover / Verifier 类型和 Put、Get、PubRand、PriRand 等方法。
+												 //ps.Prove / ps.Verify 都依赖 proof 包的上下文对象来进行 P/V 交互或非交互式转换
+	sh "go.dedis.ch/kyber/v4/shuffle"            //给 go.dedis.ch/kyber/v4/shuffle 包起了别名 sh。在文件后面使用 sh.SimpleShuffle
+	                                             //这个子包实现了 Neff 的 SimpleShuffle（也就是更简单的 k-shuffle 证明）。PairShuffle 在最后一步会调用 sh.SimpleShuffle 的 Prove / Verify。
+	"go.dedis.ch/kyber/v4/util/random"           //提供一些工具函数来从 cipher.Stream 或其它来源生成随机位/字节
 )
 
-// Suite wraps the functionalities needed by the shuffle/ package. These are the
-// same functionatlities needed by the proof/ package.
+// Suite wraps the functionalities needed by the shuffle/ package. These are the 
+// same functionatlities needed by the proof/ package.  //套件封装了 shuffle/ 包所需的各项功能。这些功能也是 proof/ 包所需要的。
 type Suite proof.Suite
+//这是一个类型别名（alias）或类型定义，将 proof.Suite 重命名为 Suite（在本文件/本包里使用）。proof.Suite 在 kyber 中封装了所用群（curve）和相关操作（产生 Point/Scalar 等）。
 
-// XX these could all be inlined into PairShuffleProof; do we want to?
+// XX these could all be inlined into PairShuffleProof; do we want to?    //这些都可以内联到PairShuffleProof；我们想要吗？
 
 // XX the Zs in front of some field names are a kludge to make them
 // accessible via the reflection API,
-// which refuses to touch unexported fields in a struct.
-//一些字段名称前面的Zs是一个组合，以便通过反射API访问它们，它拒绝访问结构体中未导出的字段。
+// which refuses to touch unexported fields in a struct.    //在某些字段名称前加上“XX zs”这一做法是为了便于通过反射 API 访问这些字段，而反射 API 不会触及结构体中未导出的字段。
+//在 Go 语言里，结构体的字段名如果首字母是大写的，表示它是导出的（exported），也就是可以被包外访问。反之，如果首字母是小写的，就是未导出的（unexported），包外无法直接访问它。
+// /“在某些字段名称前加上 XX zs，是为了让这些字段的名字以大写字母开头（从而变成导出字段），这样反射 API 就能访问这些字段。否则，反射是无法访问结构体中未导出的字段的。”
 
-// P (Prover) step 1: public commitments    //公共承诺
+//-------------------协议数据结构化------------------
+//Neff 的 PairShuffle 是一个交互式（或经 Fiat–Shamir 转成非交互式）的多步协议。每一步（P1、V2、P3、V4、P5、以及内嵌 SimpleShuffle）都有“要发/要收”的数据。
+//这里的 ega1..ega6 就是把每一步要发送/接收的“承诺、挑战、响应”等数据封装成结构体，以便通过 ctx.Put / ctx.Get 在 Prove 与 Verify 之间传递或在 transcript 中吸收/输出。
+// P (Prover) step 1: public commitments    //公共承诺  证明者的第1步公开承诺
 type ega1 struct {
-	Gamma            kyber.Point
-	A, C, U, W       []kyber.Point
-	Lambda1, Lambda2 kyber.Point
-}
+	Gamma            kyber.Point     //Gamma：单个群元素点，等同于 g^gamma（即把私人标量 gamma 映射成点）。在后续方程里 Gamma 常用作一个“公共基点”来结合其它响应（例如 p5 中的 Zsigma 用来乘 Gamma）。
+	A, C, U, W       []kyber.Point   //A[i]：一组点承诺，通常是 A[i] = a[i] * g（其中 a[i] 是 Prover 随机选的标量）。也就是把隐藏标量 a[i] 的承诺暴露成点 A[i]。其他类似
+	Lambda1, Lambda2 kyber.Point     //两个点（聚合承诺），它们是把若干项加权相加后的公共承诺，用在后面的等式校验（在 Verify 中会用到，见代码对 Phi1/Phi2 的比较）。
+}  //A,C,U,W 都是长度 k 的数组（k 为洗牌的对数）。实现上必须保证长度一致。
 
 // V (Verifier) step 2: random challenge t
 type ega2 struct {
