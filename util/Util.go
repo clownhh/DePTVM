@@ -119,8 +119,9 @@ func CheckErr(err error) {
 	}
 }
 
+//将密码学点列表序列化为 Protocol Buffers 格式的工具函数； 将密码学数据结构序列化为紧凑的二进制格式，用于网络传输
 func ProtobufEncodePointList(plist []kyber.Point) []byte {
-	byteNym, err := protobuf.Encode(&PointList{plist})
+	byteNym, err := protobuf.Encode(&PointList{plist})  //// 调用protobuf编码器，将PointList结构编码为字节
 	if err != nil {
 		panic(err.Error())
 	}
