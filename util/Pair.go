@@ -6,10 +6,10 @@ import (
 
 type Pair struct {
 	Nym kyber.Point
-	Val float64
+	Val float64   //明文是浮点型
 }
 
-type EnPair struct {
+type EnPair struct {  
 	Nym kyber.Point
-	Val []byte
+	Val []byte  //加密后的是字节流
 }
