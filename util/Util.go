@@ -50,6 +50,8 @@ func SortMap(mp map[string]string) []string {
 }
 
 //将二维字节切片转换为ByteArray切片
+//[][]byte：这是一个二维字节切片，即每个元素是一个[]byte（字节切片）
+//[]ByteArray：这是一个ByteArray结构体的切片
 func SerializeTwoDimensionArray(arr [][]byte) []ByteArray {
 	byteArr := make([]ByteArray, len(arr))
 	gob.Register(byteArr) //试图使用 gob.Register 注册 byteArr 类型，以便在 gob 编码和解码过程中识别它   //gob.Register(ByteArray{})
